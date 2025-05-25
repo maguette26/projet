@@ -1,4 +1,3 @@
-// src/components/Hero.jsx
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -7,12 +6,11 @@ const Hero = () => {
   const navigate = useNavigate();
 
   const handleClick = () => {
-    navigate('/connexion');
-
-    
+    navigate('/connexion');  
   };
 
 
+  
   
 
   return (

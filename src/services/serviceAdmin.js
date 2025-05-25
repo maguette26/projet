@@ -1,6 +1,6 @@
-import api from './api';
+import api from './api'; // Assurez-vous que c'est bien l'instance d'Axios configurée avec le token JWT
 
-// Citations (déjà fait)
+// Citations
 export const getCitations = async () => {
   const response = await api.get('/admin/citations');
   return response.data;
@@ -37,7 +37,6 @@ export const supprimerRessource = async (id) => {
   return response.data;
 };
 
-
 // Discussions forum
 export const getDiscussions = async () => {
   const response = await api.get('/admin/forum/messages');
@@ -57,5 +56,33 @@ export const getMessagesPrives = async () => {
 
 export const supprimerMessagePrive = async (id) => {
   const response = await api.delete(`/admin/messagerie/messages/${id}`);
+  return response.data;
+};
+
+// **********************************************
+// NOUVELLES FONCTIONS POUR LA GESTION DES UTILISATEURS (Basées sur votre UtilisateurController)
+// **********************************************
+
+// Récupérer tous les utilisateurs
+export const getAllUsers = async () => {
+  const response = await api.get('/utilisateurs'); // <-- Endpoint qui correspond à votre Spring Boot /api/utilisateurs
+  return response.data;
+};
+
+// Récupérer un utilisateur par ID
+export const getUserById = async (userId) => {
+    const response = await api.get(`/utilisateurs/${userId}`); // <-- Endpoint qui correspond
+    return response.data;
+};
+
+// Mettre à jour un utilisateur (y compris son rôle)
+export const updateUser = async (userId, userData) => {
+  const response = await api.put(`/utilisateurs/${userId}`, userData); // <-- Endpoint qui correspond
+  return response.data;
+};
+
+// Supprimer un utilisateur
+export const deleteUser = async (userId) => {
+  const response = await api.delete(`/utilisateurs/${userId}`); // <-- Endpoint qui correspond
   return response.data;
 };

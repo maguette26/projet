@@ -2,13 +2,12 @@ import api from './api';
 
 // Connexion
 export const login = async (email, motDePasse) => {
-  const response = await axios.post('http://localhost:9094/api/auth/login', {
+  const response = await axios.post('http://192.168.1.157:9191/api/auth/login', {
     email,
     motDePasse
   });
-  return response.data; // Assure-toi que response.data contient { token, role }
+  return response.data;
 };
-
 // Inscription
 export const register = async (userData) => {
   const response = await api.post('/auth/inscription', userData);

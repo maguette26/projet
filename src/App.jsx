@@ -11,6 +11,8 @@ import TableauProfessionnel from './pages/TableauProfessionnel.jsx';
 import Forum from './pages/Forum.jsx';
 import Ressources from './pages/Ressources.jsx';
 import Inscription from './pages/Inscription.jsx';
+import AdminDashboard from './components/admin/AdminDashboard.jsx';
+
 
 const App = () => {
   return (
@@ -18,9 +20,10 @@ const App = () => {
       <Routes>
         <Route path="/" element={<Accueil />} />
         <Route path="/connexion" element={<Connexion />} />
-        <Route path="/admin" element={<TableauAdmin />} />
-        <Route path="/utilisateur" element={<TableauUtilisateur />} />
-        <Route path="/professionnel" element={<TableauProfessionnel />} />
+         <Route path="/tableauAdmin" element={<TableauAdmin />} />
+          <Route path="/admin/dashboard" element={<AdminDashboard />} />
+        <Route path="/tableauProfessionnel" element={<TableauProfessionnel />} />
+        <Route path="/tableauUtilisateur" element={<TableauUtilisateur />} />
         <Route path="/forum" element={<Forum />} />
         <Route path="/ressources" element={<Ressources />} />
         <Route path="/inscription" element={<Inscription />} />

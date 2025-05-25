@@ -1,19 +1,15 @@
 import React from 'react';
 
-import Hero from '../components/Hero';
-import Citations from '../components/Citations';
-import Header from '../components/header';
+import Hero from '../components/commun/Hero'; 
+import Layout from '../components/commun/Layout'; 
 
 const Accueil = () => {
   return (
-    <>
-      <Header /> 
-      <main style={{ padding: '2rem' }}>
+    <Layout>
+      <div className="py-8 px-4 max-w-7xl mx-auto">
         <Hero />
-        <Citations />
-        
-      </main>
-    </>
+      </div>
+    </Layout>
   );
 };
 
