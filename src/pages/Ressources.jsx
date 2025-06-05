@@ -1,34 +1,20 @@
+// src/pages/Ressources.jsx
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import Layout from '../components/commun/Layout';
-// Si vous avez un contexte d'authentification ou d'utilisateur pour vérifier le statut premium
-// import { useAuth } from '../contexts/AuthContext'; // Exemple si vous avez un AuthContext
+import api from '../services/api'; // Importe l'instance 'api' centralisée
+import Layout from '../components/commun/Layout'; // Assurez-vous que le chemin est correct
 
 const Ressources = () => {
     const [fonctionnalites, setFonctionnalites] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    // Supposons que vous ayez un moyen de savoir si l'utilisateur est premium ou non.
-    // Cela pourrait venir d'un contexte d'authentification ou d'un appel API.
-    // Pour cet exemple, nous allons simuler un utilisateur non-premium par défaut.
-    const [isUserPremium, setIsUserPremium] = useState(false); // À remplacer par votre logique réelle
+    // État pour le statut premium de l'utilisateur
+    const [isUserPremium, setIsUserPremium] = useState(false); 
 
-    // Simulation de la vérification du statut premium de l'utilisateur
-    useEffect(() => {
-        // Ici, vous feriez un appel à votre backend pour vérifier le statut premium de l'utilisateur connecté.
-        // Ou bien, si votre token JWT contient cette information, vous la liriez.
-        // Exemple factice:
-        const checkPremiumStatus = async () => {
-            // Logique pour vérifier si l'utilisateur est premium (ex: depuis l'API, ou localStorage)
-            // Pour l'instant, on le met à false pour montrer le comportement non-premium
-            // await new Promise(resolve => setTimeout(resolve, 500)); // Simuler un délai API
-            // setIsUserPremium(true); // Décommentez ceci pour simuler un utilisateur premium
-        };
-        checkPremiumStatus();
-    }, []);
+    // État pour les informations de l'utilisateur connecté (pour récupérer le statut premium)
+    const [userInfo, setUserInfo] = useState(null);
 
-
+    // Gère les erreurs renvoyées par l'API
     const handleApiError = (err, defaultMessage) => {
         console.error("Erreur API:", err);
         if (err.response) {
@@ -38,6 +24,7 @@ const Ressources = () => {
                     break;
                 case 401:
                     setError("Session expirée, veuillez vous reconnecter.");
+                    // L'intercepteur de api.js devrait gérer la redirection ici.
                     break;
                 case 404:
                     setError("La ressource demandée n'a pas été trouvée. Assurez-vous que le backend est en cours d'exécution et que l'URL est correcte.");
@@ -52,30 +39,53 @@ const Ressources = () => {
         }
     };
 
+    // Effet pour récupérer les informations de l'utilisateur (y compris le statut premium)
     useEffect(() => {
-        const fetchFonctionnalites = async () => {
-            setLoading(true);
-            setError(null);
+        const fetchUserInfo = async () => {
             try {
-                // Endpoint pour récupérer toutes les fonctionnalités (l'authentification n'est pas nécessaire ici)
-                // Assurez-vous que votre backend permet un accès non authentifié à cet endpoint
-                // pour récupérer au moins les métadonnées des ressources.
-                const res = await axios.get('/api/fonctionnalites');
-                if (Array.isArray(res.data)) {
-                    // Filtrer pour n'afficher que les fonctionnalités "actives"
-                    setFonctionnalites(res.data.filter(f => f.statut === 'active'));
-                } else {
-                    throw new Error("Format de données inattendu de l'API.");
-                }
+                // Récupère les infos utilisateur. Assurez-vous que votre backend renvoie le statut premium ici.
+                const res = await api.get('/auth/me'); 
+                setUserInfo(res.data);
+                // Si votre backend renvoie une propriété 'premium' pour l'utilisateur:
+                // setIsUserPremium(res.data.premium || false); 
+                // Pour l'exemple, nous allons simuler le statut premium pour les tests.
+                // REMPLACEZ CECI PAR LA VRAIE LOGIQUE DE RÉCUPÉRATION DU STATUT PREMIUM DE L'UTILISATEUR
+                setIsUserPremium(res.data.role === 'ADMIN'); // Exemple: ADMIN est premium
+                // Ou si vous avez un champ 'isPremium' dans votre UserDetails ou Entité Utilisateur:
+                // setIsUserPremium(res.data.isPremium || false); 
+
             } catch (err) {
-                handleApiError(err, "Erreur lors du chargement des ressources.");
+                console.warn("Impossible de récupérer les informations utilisateur (peut-être non connecté ou erreur API):", err);
+                // Si l'utilisateur n'est pas connecté, il ne sera pas premium.
+                setIsUserPremium(false); 
             } finally {
-                setLoading(false);
+                // Une fois les infos utilisateur (ou l'absence de celles-ci) traitées, on peut charger les fonctionnalités
+                fetchFonctionnalites();
             }
         };
 
-        fetchFonctionnalites();
-    }, []);
+        fetchUserInfo();
+    }, []); // S'exécute une seule fois au montage du composant
+
+    // Effet pour récupérer les fonctionnalités
+    const fetchFonctionnalites = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            // Utilise l'instance 'api' et l'URL sans slash final pour correspondre au backend
+            const res = await api.get('/fonctionnalites'); 
+            if (Array.isArray(res.data)) {
+                // Filtrer pour n'afficher que les fonctionnalités "actives" (statut est un booléen)
+                setFonctionnalites(res.data.filter(f => f.statut === true));
+            } else {
+                throw new Error("Format de données inattendu de l'API.");
+            }
+        } catch (err) {
+            handleApiError(err, "Erreur lors du chargement des ressources.");
+        } finally {
+            setLoading(false);
+        }
+    };
 
     if (loading) {
         return (
@@ -107,7 +117,7 @@ const Ressources = () => {
                 <div className="mt-4 text-center text-red-500">
                     <p>Contenu réservé aux membres Premium.</p>
                     <button
-                        onClick={() => alert("Rediriger vers la page d'abonnement ou de connexion premium")}
+                        onClick={() => console.warn("Rediriger vers la page d'abonnement ou de connexion premium")}
                         className="btn btn-warning mt-2"
                     >
                         Devenir Premium
@@ -163,7 +173,6 @@ const Ressources = () => {
                     </div>
                 )}
 
-
                 {fonctionnalites.length === 0 ? (
                     <div className="alert alert-info text-center">
                         Aucune ressource disponible pour le moment.
@@ -173,7 +182,7 @@ const Ressources = () => {
                         {fonctionnalites.map((f) => (
                             <div key={f.id} className="bg-white rounded-lg shadow-md p-6">
                                 <h2 className="text-xl font-semibold text-gray-900 mb-2">{f.nom}</h2>
-                                <p className="text-gray-700 mb-4">{f.description.length > 100 && !f.premium ? `${f.description.substring(0, 100)}...` : f.description}</p>
+                                <p className="text-gray-700 mb-4">{f.description.length > 100 && f.premium && !isUserPremium ? `${f.description.substring(0, 100)}...` : f.description}</p>
                                 <div className="flex justify-between items-center text-sm text-gray-500 mb-2">
                                     <span>Type: <span className="font-medium">{f.type}</span></span>
                                     {f.premium && (

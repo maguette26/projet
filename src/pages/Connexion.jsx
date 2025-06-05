@@ -1,9 +1,9 @@
 // src/pages/Connexion.jsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { login } from '../services/serviceAuth'; // Importer le service d'authentification
 
-import Layout from '../components/commun/Layout'; 
+import Layout from '../components/commun/Layout';
 
 const Connexion = () => {
     const [email, setEmail] = useState('');
@@ -13,57 +13,53 @@ const Connexion = () => {
 
     const handleConnexion = async (e) => {
         e.preventDefault();
+        setMessage('');
+
         try {
-            const response = await axios.post('http://192.168.1.157:9191/api/auth/login', {
-                email,
-                motDePasse,
-            });
+            // Appel à la fonction de login, qui ne renvoie PAS de token, seulement le rôle
+            const responseData = await login(email, motDePasse);
+            const { role } = responseData; // Récupère le rôle directement
 
-            // Récupère le token et le rôle exact retourné par le backend
-            const { token, role } = response.data; 
-            localStorage.setItem('token', token);
+            // Nettoyer le rôle : "ROLE_ADMIN" -> "ADMIN", "ROLE_USER" -> "UTILISATEUR", etc.
+            const cleanedRole = role.replace('ROLE_', '');
 
-            // --- GESTION DU RÔLE POUR LE FRONTEND (affichage dans le Header, etc.) ---
-            // Le rôle du backend peut être 'ADMIN', 'USER', 'PSYCHIATRE', ou 'PSYCHOLOGUE'
-            let roleToStore = role;
-            if (role === 'USER') {
-                roleToStore = 'UTILISATEUR'; // Convertit 'USER' du backend en 'UTILISATEUR' pour le frontend
+            // Stocker le rôle nettoyé dans le localStorage
+            // Si le backend renvoie 'USER', et que vous voulez 'UTILISATEUR' sur le front
+            let roleToStore = cleanedRole;
+            if (cleanedRole === 'USER') {
+                roleToStore = 'UTILISATEUR';
             }
-            // Les rôles 'ADMIN', 'PSYCHIATRE', 'PSYCHOLOGUE' sont compatibles avec le Header
-            localStorage.setItem('role', roleToStore); // Stocke le rôle harmonisé pour le frontend
-            // --- FIN GESTION DU RÔLE POUR LE FRONTEND ---
+            localStorage.setItem('role', roleToStore); // C'est tout ce que nous stockons localement
 
             setMessage('Connexion réussie ! Redirection en cours...');
 
-            // --- LOGIQUE DE REDIRECTION BASÉE SUR LE RÔLE DU BACKEND ---
-            // On utilise la valeur 'role' brute du backend pour la redirection car elle correspond aux routes
-            switch (role) {
+            // Logique de redirection basée sur le rôle nettoyé
+            switch (cleanedRole) {
                 case 'ADMIN':
-                    navigate('/admin/dashboard'); // Redirige l'administrateur
+                    navigate('/admin/dashboard'); // Redirection spécifique pour l'ADMIN
                     break;
                 case 'PSYCHIATRE':
                 case 'PSYCHOLOGUE':
-                    navigate('/'); // Redirige le professionnel
-                    break;
-                case 'USER': 
-                    navigate('/'); // Redirige l'utilisateur standard
+                case 'USER': // Utilisateur et Professionnel vont vers la page d'accueil
+                    navigate('/');
                     break;
                 default:
-                    console.warn('Rôle utilisateur inconnu après connexion:', role);
-                    navigate('/'); // Redirection par défaut (par exemple, vers la page d'accueil)
+                    console.warn('Rôle utilisateur inconnu après connexion (nettoyé):', cleanedRole);
+                    console.warn('Rôle utilisateur original du backend:', role);
+                    navigate('/'); // Redirection par défaut si le rôle n'est pas reconnu
                     break;
             }
-            // --- FIN LOGIQUE DE REDIRECTION ---
 
         } catch (error) {
-            const errorMessage = error.response?.data?.message || "Connexion échouée. Veuillez réessayer.";
+            // Gérer les erreurs de connexion (ex: 401 Unauthorized)
+            const errorMessage = error.response?.data?.message || "Connexion échouée. Veuillez vérifier votre email/mot de passe.";
             setMessage("Erreur : " + errorMessage);
             console.error("Erreur de connexion:", error.response || error.message);
         }
     };
 
     return (
-        <Layout> {/* Utilisation du composant Layout qui contient Header et PiedPage */}
+        <Layout>
             <div className="flex-grow flex items-center justify-center px-4 sm:px-6 lg:px-8 py-8 bg-gray-50">
                 <div className="max-w-md w-full space-y-8 shadow-lg p-8 rounded-2xl border border-gray-200 bg-white">
                     <div>

@@ -1,39 +1,46 @@
-// src/App.jsx
-
+// src/App.js
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import Inscription from './pages/Inscription';
+import InscriptionUser from './pages/InscriptionUser';
+import InscriptionProfessionnel from './pages/InscriptionProfessionnel';
+import Connexion from './pages/Connexion';
+import Ressources from './pages/Ressources';
+import Forum from './pages/Forum';
+import TableauUtilisateur from './pages/TableauUtilisateur';
+import TableauAdmin  from './pages/TableauAdmin';
+import TableauProfessionnel from './pages/TableauProfessionnel';
+import Accueil from './pages/Accueil';
+import  AdminDashboard from './components/admin/AdminDashboard';
 
-import Accueil from './pages/Accueil.jsx';
-import Connexion from './pages/Connexion.jsx';
-import TableauAdmin from './pages/TableauAdmin.jsx';
-import TableauUtilisateur from './pages/TableauUtilisateur.jsx';
-import TableauProfessionnel from './pages/TableauProfessionnel.jsx';
-import Forum from './pages/Forum.jsx';
-import Ressources from './pages/Ressources.jsx';
-import Inscription from './pages/Inscription.jsx';
-import AdminDashboard from './components/admin/AdminDashboard.jsx';
+// IMPORTANT : Importez votre composant du tableau de bord de l'administrateur
+function App() {
+    return (
+        <Router>
+         
+                <Routes>
+                    <Route path="/" element={<Accueil />} />
+                    <Route path="/inscription" element={<Inscription />} />
+                    <Route path="/inscription/utilisateur" element={<InscriptionUser />} />
+                    <Route path="/inscription/professionnel" element={<InscriptionProfessionnel />} />
+                    <Route path="/connexion" element={<Connexion />} />
+                    <Route path="/ressources" element={<Ressources />} />
+                    <Route path="/forum" element={<Forum />} />
 
+                    {/* Routes des tableaux de bord */}
+                    {/* Ancien TableauAdmin, peut être remplacé si AdminDashboard est la nouvelle route */}
+                     <Route path="/tableauAdmin" element={<TableauAdmin />} /> 
 
-const App = () => {
-  return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Accueil />} />
-        <Route path="/connexion" element={<Connexion />} />
-         <Route path="/tableauAdmin" element={<TableauAdmin />} />
-          <Route path="/admin/dashboard" element={<AdminDashboard />} />
-        <Route path="/tableauProfessionnel" element={<TableauProfessionnel />} />
-        <Route path="/tableauUtilisateur" element={<TableauUtilisateur />} />
-        <Route path="/forum" element={<Forum />} />
-        <Route path="/ressources" element={<Ressources />} />
-        <Route path="/inscription" element={<Inscription />} />
+                    {/* Nouvelle route pour le tableau de bord de l'ADMIN */}
+                    <Route path="/admin/dashboard" element={<AdminDashboard/>} />
 
-
-        {/* Redirection pour toute route non reconnue */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </Router>
-  );
-};
+                    <Route path="/tableauUtilisateur" element={<TableauUtilisateur />} />
+                    <Route path="/tableauProfessionnel" element={<TableauProfessionnel />} />
+                    {/* Ajoutez d'autres routes si nécessaire */}
+                </Routes>
+           
+        </Router>
+    );
+}
 
 export default App;

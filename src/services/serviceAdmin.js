@@ -1,88 +1,192 @@
-import api from './api'; // Assurez-vous que c'est bien l'instance d'Axios configurée avec le token JWT
+import api from './api';
 
-// Citations
-export const getCitations = async () => {
-  const response = await api.get('/admin/citations');
-  return response.data;
-};
+// --- Fonctions de gestion des utilisateurs ---
 
-export const publierCitation = async (citationData) => {
-  const response = await api.post('/admin/citations', citationData);
-  return response.data;
-};
-
-export const supprimerCitation = async (id) => {
-  const response = await api.delete(`/admin/citations/${id}`);
-  return response.data;
-};
-
-// Ressources éducatives
-export const getRessources = async () => {
-  const response = await api.get('/admin/ressources');
-  return response.data;
-};
-
-export const ajouterRessource = async (ressourceData) => {
-  const response = await api.post('/admin/ressources', ressourceData);
-  return response.data;
-};
-
-export const modifierRessource = async (id, ressourceData) => {
-  const response = await api.put(`/admin/ressources/${id}`, ressourceData);
-  return response.data;
-};
-
-export const supprimerRessource = async (id) => {
-  const response = await api.delete(`/admin/ressources/${id}`);
-  return response.data;
-};
-
-// Discussions forum
-export const getDiscussions = async () => {
-  const response = await api.get('/admin/forum/messages');
-  return response.data;
-};
-
-export const supprimerDiscussion = async (id) => {
-  const response = await api.delete(`/admin/forum/messages/${id}`);
-  return response.data;
-};
-
-// Messages privés / messagerie
-export const getMessagesPrives = async () => {
-  const response = await api.get('/admin/messagerie/messages');
-  return response.data;
-};
-
-export const supprimerMessagePrive = async (id) => {
-  const response = await api.delete(`/admin/messagerie/messages/${id}`);
-  return response.data;
-};
-
-// **********************************************
-// NOUVELLES FONCTIONS POUR LA GESTION DES UTILISATEURS (Basées sur votre UtilisateurController)
-// **********************************************
-
-// Récupérer tous les utilisateurs
+/**
+ * Récupère tous les utilisateurs enregistrés dans le système.
+ * Nécessite les permissions ADMIN.
+ * @returns {Promise<Array>} Une promesse qui résout avec une liste d'objets utilisateur.
+ */
 export const getAllUsers = async () => {
-  const response = await api.get('/utilisateurs'); // <-- Endpoint qui correspond à votre Spring Boot /api/utilisateurs
-  return response.data;
+    try {
+        console.log("serviceAdmin: Récupération de tous les utilisateurs via '/utilisateurs'...");
+        // MODIFICATION ICI : Appel à /utilisateurs au lieu de /utilisateurs/all
+        const response = await api.get('/utilisateurs');
+        console.log("serviceAdmin: Utilisateurs récupérés:", response.data);
+        return response.data;
+    } catch (error) {
+        console.error("serviceAdmin: Erreur lors de la récupération des utilisateurs:", error.response?.data || error.message);
+        throw error;
+    }
 };
 
-// Récupérer un utilisateur par ID
-export const getUserById = async (userId) => {
-    const response = await api.get(`/utilisateurs/${userId}`); // <-- Endpoint qui correspond
-    return response.data;
-};
-
-// Mettre à jour un utilisateur (y compris son rôle)
+/**
+ * Met à jour les informations d'un utilisateur spécifique.
+ * Nécessite les permissions ADMIN.
+ * @param {number} userId L'ID de l'utilisateur à mettre à jour.
+ * @param {object} userData Les données de l'utilisateur à mettre à jour (ex: { role: 'ADMIN' }).
+ * @returns {Promise<object>} Une promesse qui résout avec l'objet utilisateur mis à jour.
+ */
 export const updateUser = async (userId, userData) => {
-  const response = await api.put(`/utilisateurs/${userId}`, userData); // <-- Endpoint qui correspond
-  return response.data;
+    try {
+        console.log(`serviceAdmin: Mise à jour de l'utilisateur ID ${userId} avec les données:`, userData);
+        const response = await api.put(`/utilisateurs/${userId}`, userData);
+        console.log(`serviceAdmin: Utilisateur ID ${userId} mis à jour:`, response.data);
+        return response.data;
+    } catch (error) {
+        console.error(`serviceAdmin: Erreur lors de la mise à jour de l'utilisateur ID ${userId}:`, error.response?.data || error.message);
+        throw error;
+    }
 };
 
-// Supprimer un utilisateur
+/**
+ * Supprime un utilisateur spécifique du système.
+ * Nécessite les permissions ADMIN.
+ * @param {number} userId L'ID de l'utilisateur à supprimer.
+ * @returns {Promise<void>} Une promesse qui résout une fois la suppression réussie.
+ */
 export const deleteUser = async (userId) => {
-  const response = await api.delete(`/utilisateurs/${userId}`); // <-- Endpoint qui correspond
-  return response.data;
+    try {
+        console.log(`serviceAdmin: Suppression de l'utilisateur ID ${userId}...`);
+        await api.delete(`/utilisateurs/${userId}`);
+        console.log(`serviceAdmin: Utilisateur ID ${userId} supprimé avec succès.`);
+    } catch (error) {
+        console.error(`serviceAdmin: Erreur lors de la suppression de l'utilisateur ID ${userId}:`, error.response?.data || error.message);
+        throw error;
+    }
+};
+
+// --- Fonctions de gestion des professionnels de santé mentale ---
+
+/**
+ * Récupère tous les professionnels de santé mentale (validés, en attente, refusés).
+ * Nécessite les permissions ADMIN.
+ * @returns {Promise<Array>} Une promesse qui résout avec une liste d'objets professionnel.
+ */
+export const getProfessionnels = async () => {
+    try {
+        console.log("serviceAdmin: Récupération de tous les professionnels de santé mentale via '/professionnels/tous'...");
+        const response = await api.get('/professionnels/tous');
+        console.log("serviceAdmin: Professionnels récupérés:", response.data);
+        return response.data;
+    } catch (error) {
+        console.error("serviceAdmin: Erreur lors de la récupération des professionnels:", error.response?.data || error.message);
+        throw error;
+    }
+};
+
+/**
+ * Met à jour le statut de validation d'un professionnel de santé mentale.
+ * Nécessite les permissions ADMIN.
+ * @param {number} id L'ID du professionnel à valider ou refuser.
+ * @param {boolean} valide Indique si le professionnel doit être validé (true) ou refusé (false).
+ * @returns {Promise<object>} Une promesse qui résout avec l'objet professionnel mis à jour.
+ */
+export const validateProfessionnel = async (id, valide) => {
+    try {
+        console.log(`serviceAdmin: Envoi de la requête de validation/refus pour professionnel ID: ${id}, valide: ${valide}`);
+        const response = await api.patch(
+            `/professionnels/validation/${id}`,
+            { valide: valide }
+        );
+        console.log(`serviceAdmin: Réponse de validation/refus pour ID ${id}:`, response.data);
+        return response.data;
+    } catch (error) {
+        console.error(`serviceAdmin: Erreur lors de la validation/refus du professionnel ID ${id}:`, error.response?.data || error.message);
+        throw error;
+    }
+};
+
+/**
+ * Télécharge le document justificatif d'un professionnel.
+ * Nécessite les permissions ADMIN.
+ * @param {string} filename Le nom du fichier à télécharger.
+ * @returns {Promise<Blob>} Une promesse qui résout avec un objet Blob représentant le fichier.
+ */
+export const downloadDocumentJustificatif = async (filename) => {
+    try {
+        console.log(`serviceAdmin: Tentative de téléchargement du document: ${filename}`);
+        const response = await api.get(`/professionnels/fichiers/${filename}`, {
+            responseType: 'blob',
+        });
+        console.log(`serviceAdmin: Document '${filename}' téléchargé avec succès.`);
+        return response.data;
+    } catch (error) {
+        console.error(`serviceAdmin: Erreur lors du téléchargement du document '${filename}':`, error.response?.data || error.message);
+        throw error;
+    }
+};
+
+// --- NOUVELLES FONCTIONS DE MODÉRATION DES DISCUSSIONS ET MESSAGES PRIVÉS ---
+
+/**
+ * Récupère tous les messages du forum (discussions).
+ * Nécessite les permissions ADMIN (ou MODERATOR si un tel rôle existe).
+ * @returns {Promise<Array>} Une promesse qui résout avec une liste d'objets message de forum.
+ */
+export const getDiscussions = async () => {
+    try {
+        console.log("serviceAdmin: Récupération des discussions du forum...");
+        // Confirmez l'endpoint exact avec votre backend. Exemple: /forum/discussions/all
+        const response = await api.get('/forum/discussions/all');
+        console.log("serviceAdmin: Discussions du forum récupérées:", response.data);
+        return response.data;
+    } catch (error) {
+        console.error("serviceAdmin: Erreur lors de la récupération des discussions du forum:", error.response?.data || error.message);
+        throw error;
+    }
+};
+
+/**
+ * Supprime un message spécifique du forum (discussion).
+ * Nécessite les permissions ADMIN (ou MODERATOR).
+ * @param {number} id L'ID du message de forum à supprimer.
+ * @returns {Promise<void>} Une promesse qui résout une fois la suppression réussie.
+ */
+export const supprimerDiscussion = async (id) => {
+    try {
+        console.log(`serviceAdmin: Suppression de la discussion du forum ID ${id}...`);
+        // Confirmez l'endpoint exact et la méthode HTTP (DELETE). Exemple: /forum/discussions/{id}
+        await api.delete(`/forum/discussions/${id}`);
+        console.log(`serviceAdmin: Discussion du forum ID ${id} supprimée avec succès.`);
+    } catch (error) {
+        console.error(`serviceAdmin: Erreur lors de la suppression de la discussion du forum ID ${id}:`, error.response?.data || error.message);
+        throw error;
+    }
+};
+
+/**
+ * Récupère tous les messages privés entre utilisateurs.
+ * Nécessite les permissions ADMIN (ou MODERATOR).
+ * @returns {Promise<Array>} Une promesse qui résout avec une liste d'objets message privé.
+ */
+export const getMessagesPrives = async () => {
+    try {
+        console.log("serviceAdmin: Récupération des messages privés...");
+        // Confirmez l'endpoint exact. Exemple: /messages/prive/all ou /moderation/messages-prives
+        const response = await api.get('/messages/prive/all');
+        console.log("serviceAdmin: Messages privés récupérés:", response.data);
+        return response.data;
+    } catch (error) {
+        console.error("serviceAdmin: Erreur lors de la récupération des messages privés:", error.response?.data || error.message);
+        throw error;
+    }
+};
+
+/**
+ * Supprime un message privé spécifique.
+ * Nécessite les permissions ADMIN (ou MODERATOR).
+ * @param {number} id L'ID du message privé à supprimer.
+ * @returns {Promise<void>} Une promesse qui résout une fois la suppression réussie.
+ */
+export const supprimerMessagePrive = async (id) => {
+    try {
+        console.log(`serviceAdmin: Suppression du message privé ID ${id}...`);
+        // Confirmez l'endpoint exact et la méthode HTTP (DELETE). Exemple: /messages/prive/{id}
+        await api.delete(`/messages/prive/${id}`);
+        console.log(`serviceAdmin: Message privé ID ${id} supprimé avec succès.`);
+    } catch (error) {
+        console.error(`serviceAdmin: Erreur lors de la suppression du message privé ID ${id}:`, error.response?.data || error.message);
+        throw error;
+    }
 };
