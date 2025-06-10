@@ -8,16 +8,18 @@ import Connexion from './pages/Connexion';
 import Ressources from './pages/Ressources';
 import Forum from './pages/Forum';
 import TableauUtilisateur from './pages/TableauUtilisateur';
-import TableauAdmin  from './pages/TableauAdmin';
+import TableauAdmin from './pages/TableauAdmin';
 import TableauProfessionnel from './pages/TableauProfessionnel';
 import Accueil from './pages/Accueil';
-import  AdminDashboard from './components/admin/AdminDashboard';
+import AdminDashboard from './components/admin/AdminDashboard';
+import DevenirPremium from './pages/DevenirPremium'; // <-- Importez la nouvelle page
 
-// IMPORTANT : Importez votre composant du tableau de bord de l'administrateur
+import { RessourceProvider } from './pages/RessourceContext.jsx'; // Assurez-vous que le chemin et l'extension sont corrects
+
 function App() {
     return (
         <Router>
-         
+            <RessourceProvider>
                 <Routes>
                     <Route path="/" element={<Accueil />} />
                     <Route path="/inscription" element={<Inscription />} />
@@ -26,19 +28,17 @@ function App() {
                     <Route path="/connexion" element={<Connexion />} />
                     <Route path="/ressources" element={<Ressources />} />
                     <Route path="/forum" element={<Forum />} />
+                    <Route path="/devenir-premium" element={<DevenirPremium />} /> {/* <-- Nouvelle route */}
 
                     {/* Routes des tableaux de bord */}
-                    {/* Ancien TableauAdmin, peut être remplacé si AdminDashboard est la nouvelle route */}
-                     <Route path="/tableauAdmin" element={<TableauAdmin />} /> 
-
-                    {/* Nouvelle route pour le tableau de bord de l'ADMIN */}
-                    <Route path="/admin/dashboard" element={<AdminDashboard/>} />
+                    <Route path="/tableauAdmin" element={<TableauAdmin />} /> 
+                    <Route path="/admin/dashboard" element={<AdminDashboard />} />
 
                     <Route path="/tableauUtilisateur" element={<TableauUtilisateur />} />
                     <Route path="/tableauProfessionnel" element={<TableauProfessionnel />} />
                     {/* Ajoutez d'autres routes si nécessaire */}
                 </Routes>
-           
+            </RessourceProvider>
         </Router>
     );
 }

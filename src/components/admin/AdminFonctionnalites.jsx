@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import api from '../../services/api'; // Importe l'instance 'api' centralisée
 import { logout } from '../../services/serviceAuth'; // Importe la fonction de déconnexion
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPencilAlt, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faPencilAlt, faTrash, faPlus } from '@fortawesome/free-solid-svg-icons'; // Ajout de faPlus pour un bouton d'ajout clair
 
 function AdminFonctionnalites() {
     // États pour les fonctionnalités
@@ -18,6 +18,8 @@ function AdminFonctionnalites() {
     const [type, setType] = useState('');
     const [statut, setStatut] = useState(true); // true pour actif, false pour inactif
     const [premium, setPremium] = useState(false);
+    const [lienFichier, setLienFichier] = useState(''); // Pour les URLs de vidéos/podcasts/outils
+    const [categorie, setCategorie] = useState(''); // Pour une organisation supplémentaire si nécessaire
     const [editId, setEditId] = useState(null);
 
     // États pour les informations de l'utilisateur connecté
@@ -35,17 +37,14 @@ function AdminFonctionnalites() {
      */
     const fetchUserInfo = async () => {
         try {
-            // L'URL est relative à la baseURL de api.js, qui est '/api'.
-            // Donc, cela devient /api/auth/me, qui est ensuite proxifié.
             const res = await api.get('/auth/me'); 
             setRole(res.data.role);
             setEmail(res.data.email);
             fetchFonctionnalites(); // Récupère les fonctionnalités une fois l'utilisateur identifié
         } catch (err) {
-            // L'intercepteur de api.js gère déjà la redirection pour les 401
             console.error("Erreur lors de la récupération des infos utilisateur:", err);
             setError("Erreur lors de la récupération des informations utilisateur.");
-            setLoading(false); // Arrête le chargement même en cas d'erreur
+            setLoading(false); 
         }
     };
 
@@ -54,8 +53,7 @@ function AdminFonctionnalites() {
      */
     const handleLogout = async () => {
         try {
-            await logout(); // Appel de la fonction de déconnexion centralisée
-            // La redirection est gérée par la fonction logout elle-même (ou son intercepteur)
+            await logout(); 
         } catch (err) {
             console.error("Erreur lors de la déconnexion:", err);
             setError("Erreur lors de la déconnexion.");
@@ -66,9 +64,8 @@ function AdminFonctionnalites() {
      * Récupère la liste des fonctionnalités depuis l'API.
      */
     const fetchFonctionnalites = async () => {
-        setError(null); // Réinitialise les erreurs précédentes
+        setError(null); 
         try {
-            // CHANGEMENT ICI : Suppression du slash final pour GET /fonctionnalites
             const res = await api.get('/fonctionnalites'); 
             if (Array.isArray(res.data)) {
                 setFonctionnalites(res.data);
@@ -78,7 +75,7 @@ function AdminFonctionnalites() {
         } catch (err) {
             handleApiError(err, "Erreur lors du chargement des fonctionnalités.");
         } finally {
-            setLoading(false); // Arrête le chargement une fois les données récupérées (ou en cas d'erreur)
+            setLoading(false); 
         }
     };
 
@@ -98,7 +95,7 @@ function AdminFonctionnalites() {
                 case 401:
                     setError("Session expirée ou non autorisée. Veuillez vous reconnecter.");
                     break;
-                case 404: // Ce cas est maintenant le plus pertinent pour votre problème actuel
+                case 404: 
                     setError("La ressource demandée n'a pas été trouvée. Vérifiez l'URL ou si le backend est démarré.");
                     break;
                 default:
@@ -118,9 +115,11 @@ function AdminFonctionnalites() {
         setNom('');
         setDescription('');
         setType('');
-        setStatut(true); // Par défaut actif
+        setStatut(true); 
         setPremium(false);
-        setEditId(null); // Annule le mode édition
+        setLienFichier('');
+        setCategorie('');
+        setEditId(null); 
         setError(null);
         setSuccessMessage(null);
     };
@@ -140,23 +139,22 @@ function AdminFonctionnalites() {
             nom, 
             description, 
             type, 
-            statut, // statut est déjà un booléen
-            premium 
+            statut, 
+            premium,
+            lienFichier: lienFichier.trim() !== '' ? lienFichier.trim() : null, // Envoyer null si vide
+            categorie: categorie.trim() !== '' ? categorie.trim() : null // Envoyer null si vide
         };
 
         try {
             if (editId) {
-                // L'URL est relative à la baseURL de api.js, qui est '/api'.
-                // Donc, cela devient /api/fonctionnalites/{id}, qui est ensuite proxifié.
                 await api.put(`/fonctionnalites/${editId}`, payload); 
                 setSuccessMessage("Fonctionnalité modifiée avec succès !");
             } else {
-                // CHANGEMENT ICI : Suppression du slash final pour POST /fonctionnalites
                 await api.post('/fonctionnalites', payload); 
                 setSuccessMessage("Fonctionnalité ajoutée avec succès !");
             }
-            resetForm(); // Réinitialise le formulaire
-            fetchFonctionnalites(); // Rafraîchit la liste des fonctionnalités
+            resetForm(); 
+            fetchFonctionnalites(); 
         } catch (err) {
             handleApiError(err, "Erreur lors de l'enregistrement de la fonctionnalité.");
         }
@@ -170,9 +168,11 @@ function AdminFonctionnalites() {
         setNom(f.nom || '');
         setDescription(f.description || '');
         setType(f.type || '');
-        setStatut(!!f.statut); // Assure que statut est un booléen
-        setPremium(!!f.premium); // Assure que premium est un booléen
-        setEditId(f.id); // Définit l'ID pour le mode édition
+        setStatut(!!f.statut); 
+        setPremium(!!f.premium); 
+        setLienFichier(f.lienFichier || '');
+        setCategorie(f.categorie || '');
+        setEditId(f.id); 
         setError(null);
         setSuccessMessage(null);
     };
@@ -182,16 +182,13 @@ function AdminFonctionnalites() {
      * @param {string} id - L'ID de la fonctionnalité à supprimer.
      */
     const handleDelete = async (id) => {
-        // Demande de confirmation avant suppression (utilisez un modal personnalisé en production)
         if (!window.confirm("Êtes-vous sûr de vouloir supprimer cette fonctionnalité ?")) {
             return;
         }
         try {
-            // L'URL est relative à la baseURL de api.js, qui est '/api'.
-            // Donc, cela devient /api/fonctionnalites/{id}, qui est ensuite proxifié.
             await api.delete(`/fonctionnalites/${id}`); 
             setSuccessMessage("Fonctionnalité supprimée avec succès !");
-            fetchFonctionnalites(); // Rafraîchit la liste
+            fetchFonctionnalites(); 
         } catch (err) {
             handleApiError(err, "Erreur lors de la suppression de la fonctionnalité.");
         }
@@ -213,10 +210,9 @@ function AdminFonctionnalites() {
 
     return (
         <div className="container mt-5">
-            {/* Informations de l'utilisateur connecté */}
-            
+            <h1 className="text-3xl font-bold text-gray-800 mb-6 text-center">Gestion des Fonctionnalités</h1>
 
-            {email && <p>Connecté en tant que : <strong>{email}</strong> (Rôle : {role})</p>}
+            {email && <p className="text-right text-gray-600 mb-4">Connecté en tant que : <strong>{email}</strong> (Rôle : {role}) <button onClick={handleLogout} className="btn btn-sm btn-outline-secondary ms-3">Déconnexion</button></p>}
 
             {/* Affichage des messages d'erreur */}
             {error && (
@@ -235,93 +231,106 @@ function AdminFonctionnalites() {
             )}
 
             {/* Formulaire d'ajout/modification de fonctionnalité */}
-            <form onSubmit={handleSubmit} className="mb-4 card p-3 shadow-sm">
-                <h3 className="mb-3">{editId ? 'Modifier une fonctionnalité' : 'Ajouter une fonctionnalité'}</h3>
-                <div className="row g-3 align-items-end">
-                    <div className="col-md-2">
-                        <label htmlFor="nom" className="form-label">Nom</label>
-                        <input type="text" className="form-control" id="nom" value={nom} onChange={(e) => setNom(e.target.value)} required />
+            <form onSubmit={handleSubmit} className="mb-4 card p-4 shadow-md rounded-lg">
+                <h3 className="mb-4 text-xl font-semibold text-gray-700">{editId ? 'Modifier une fonctionnalité' : 'Ajouter une fonctionnalité'}</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+                    <div>
+                        <label htmlFor="nom" className="block text-sm font-medium text-gray-700">Nom <span className="text-red-500">*</span></label>
+                        <input type="text" className="form-control mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" id="nom" value={nom} onChange={(e) => setNom(e.target.value)} required />
                     </div>
-                    <div className="col-md-5">
-                        <label htmlFor="description" className="form-label">Description</label>
-                        <input type="text" className="form-control" id="description" value={description} onChange={(e) => setDescription(e.target.value)} />
-                    </div>
-                    <div className="col-md-2">
-                        <label htmlFor="type" className="form-label">Type</label>
-                        <select className="form-select" id="type" value={type} onChange={(e) => setType(e.target.value)}>
-                            <option value="">Sélectionnez...</option>
+                    <div>
+                        <label htmlFor="type" className="block text-sm font-medium text-gray-700">Type <span className="text-red-500">*</span></label>
+                        <select className="form-select mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" id="type" value={type} onChange={(e) => setType(e.target.value)} required>
+                            <option value="">Sélectionnez un type...</option>
                             <option value="citation">Citation</option>
                             <option value="podcast">Podcast</option>
                             <option value="article">Article</option>
                             <option value="video">Vidéo</option>
                             <option value="outil">Outil interactif</option>
+                            <option value="guide_pratique">Guide Pratique</option>
+                            <option value="journaling_prompt">Prompt Journaling</option>
+                            <option value="exercice_texte">Exercice de Relaxation (texte)</option>
+                            <option value="challenge">Défi Bien-être</option>
                         </select>
                     </div>
-                    <div className="col-md-1 d-flex justify-content-center align-items-center">
-                        <div className="form-check form-switch">
-                            <input className="form-check-input" type="checkbox" id="actif" checked={statut} onChange={() => setStatut(!statut)} />
-                            <label className="form-check-label" htmlFor="actif">Actif</label>
-                        </div>
+                     <div>
+                        <label htmlFor="categorie" className="block text-sm font-medium text-gray-700">Catégorie (Optionnel)</label>
+                        <input type="text" className="form-control mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" id="categorie" value={categorie} onChange={(e) => setCategorie(e.target.value)} placeholder="Ex: Méditation, Sommeil" />
                     </div>
-                    <div className="col-md-2 d-flex justify-content-start align-items-center">
-                        <div className="form-check">
-                            <input className="form-check-input" type="checkbox" id="prime" checked={premium} onChange={() => setPremium(!premium)} />
-                            <label className="form-check-label" htmlFor="prime">Premium</label>
+                    <div className="col-span-full"> {/* Prend toute la largeur sur mobile et desktop */}
+                        <label htmlFor="description" className="block text-sm font-medium text-gray-700">Description / Contenu</label>
+                        <textarea className="form-control mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" id="description" rows="3" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Description détaillée ou contenu de la ressource"></textarea>
+                    </div>
+                    <div className="col-span-full"> {/* Prend toute la largeur */}
+                        <label htmlFor="lienFichier" className="block text-sm font-medium text-gray-700">Lien du Fichier (URL pour Vidéo/Podcast/Outil, optionnel)</label>
+                        <input type="url" className="form-control mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" id="lienFichier" value={lienFichier} onChange={(e) => setLienFichier(e.target.value)} placeholder="Ex: https://youtube.com/ma-video" />
+                    </div>
+                    <div className="flex items-center space-x-4">
+                        <div className="form-check form-switch flex items-center">
+                            <input className="form-check-input h-5 w-9 rounded-full bg-gray-200 checked:bg-indigo-600 focus:ring-indigo-500" type="checkbox" role="switch" id="actif" checked={statut} onChange={() => setStatut(!statut)} />
+                            <label className="form-check-label ml-2 text-gray-700" htmlFor="actif">Actif</label>
+                        </div>
+                        <div className="form-check form-switch flex items-center">
+                            <input className="form-check-input h-5 w-9 rounded-full bg-gray-200 checked:bg-yellow-500 focus:ring-yellow-500" type="checkbox" role="switch" id="premium" checked={premium} onChange={() => setPremium(!premium)} />
+                            <label className="form-check-label ml-2 text-gray-700" htmlFor="premium">Premium</label>
                         </div>
                     </div>
                 </div>
-                <div className="mt-4">
-                    <button type="submit" className="btn btn-primary me-2">
+                <div className="mt-4 flex justify-end">
+                    <button type="submit" className="btn btn-primary me-2 px-6 py-2 rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <FontAwesomeIcon icon={editId ? faPencilAlt : faPlus} className="mr-2" />
                         {editId ? 'Modifier' : 'Ajouter'}
                     </button>
                     {editId && (
-                        <button type="button" className="btn btn-secondary ms-2" onClick={resetForm}>Annuler</button>
+                        <button type="button" className="btn btn-secondary px-6 py-2 rounded-md shadow-sm text-gray-700 bg-gray-200 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400" onClick={resetForm}>Annuler</button>
                     )}
                 </div>
             </form>
 
             {/* Tableau d'affichage des fonctionnalités */}
             {fonctionnalites.length === 0 ? (
-                <div className="alert alert-info text-center mt-4">Aucune fonctionnalité trouvée.</div>
+                <div className="alert alert-info text-center mt-4 p-4 rounded-lg shadow-sm">Aucune fonctionnalité trouvée.</div>
             ) : (
-                <div className="table-responsive">
-                    <table className="table table-bordered table-hover align-middle shadow-sm">
-                        <thead className="table-light">
+                <div className="overflow-x-auto rounded-lg shadow-md">
+                    <table className="min-w-full bg-white border border-gray-200">
+                        <thead className="bg-gray-50">
                             <tr>
-                                <th>ID</th>
-                                <th>Nom</th>
-                                <th>Description</th>
-                                <th>Type</th>
-                                <th>Statut</th>
-                                <th>Premium</th>
-                                <th className="text-center">Actions</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nom</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lien Fichier</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Catégorie</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Premium</th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody className="divide-y divide-gray-200">
                             {fonctionnalites.map((f) => (
-                                <tr key={f.id}>
-                                    <td>{f.id}</td>
-                                    <td>{f.nom}</td>
-                                    <td>{f.description}</td>
-                                    <td>{f.type}</td>
-                                    <td>
-                                        <span className={`badge ${f.statut ? 'bg-success' : 'bg-secondary'}`}>
-                                            {f.statut ? 'active' : 'inactive'}
+                                <tr key={f.id} className="hover:bg-gray-50">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{f.id}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{f.nom}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{f.type}</td>
+                                    <td className="px-6 py-4 max-w-xs truncate text-sm text-gray-500">{f.description}</td>
+                                    <td className="px-6 py-4 max-w-xs truncate text-sm text-blue-600">{f.lienFichier}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{f.categorie || '-'}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${f.statut ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                                            {f.statut ? 'Actif' : 'Inactif'}
                                         </span>
                                     </td>
-                                    <td>
-                                        {f.premium ? (
-                                            <span className="badge bg-warning text-dark">Oui</span>
-                                        ) : (
-                                            <span className="badge bg-info text-dark">Non</span>
-                                        )}
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${f.premium ? 'bg-yellow-100 text-yellow-800' : 'bg-blue-100 text-blue-800'}`}>
+                                            {f.premium ? 'Oui' : 'Non'}
+                                        </span>
                                     </td>
-                                    <td className="text-center">
-                                        <button className="btn btn-sm btn-warning me-2" onClick={() => handleEdit(f)} aria-label={`Modifier ${f.nom}`}>
-                                            <FontAwesomeIcon icon={faPencilAlt} /> Modifier
+                                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <button className="text-indigo-600 hover:text-indigo-900 mr-4" onClick={() => handleEdit(f)} aria-label={`Modifier ${f.nom}`}>
+                                            <FontAwesomeIcon icon={faPencilAlt} className="mr-1" /> Modifier
                                         </button>
-                                        <button className="btn btn-sm btn-danger" onClick={() => handleDelete(f.id)} aria-label={`Supprimer ${f.nom}`}>
-                                            <FontAwesomeIcon icon={faTrash} /> Supprimer
+                                        <button className="text-red-600 hover:text-red-900" onClick={() => handleDelete(f.id)} aria-label={`Supprimer ${f.nom}`}>
+                                            <FontAwesomeIcon icon={faTrash} className="mr-1" /> Supprimer
                                         </button>
                                     </td>
                                 </tr>

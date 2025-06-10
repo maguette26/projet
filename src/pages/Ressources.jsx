@@ -1,20 +1,20 @@
 // src/pages/Ressources.jsx
-import React, { useEffect, useState } from 'react';
-import api from '../services/api'; // Importe l'instance 'api' centralisée
-import Layout from '../components/commun/Layout'; // Assurez-vous que le chemin est correct
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import api from '../services/api'; 
+import Layout from '../components/commun/Layout'; 
+import { useRessource } from './RessourceContext.jsx'; // Assurez-vous du chemin correct
+import { useNavigate } from 'react-router-dom'; // Importez useNavigate
 
 const Ressources = () => {
     const [fonctionnalites, setFonctionnalites] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    // État pour le statut premium de l'utilisateur
     const [isUserPremium, setIsUserPremium] = useState(false); 
+    const navigate = useNavigate(); // Initialisez useNavigate
 
-    // État pour les informations de l'utilisateur connecté (pour récupérer le statut premium)
-    const [userInfo, setUserInfo] = useState(null);
+    const { selectedCategory, categoriesOrder } = useRessource();
 
-    // Gère les erreurs renvoyées par l'API
     const handleApiError = (err, defaultMessage) => {
         console.error("Erreur API:", err);
         if (err.response) {
@@ -24,9 +24,8 @@ const Ressources = () => {
                     break;
                 case 401:
                     setError("Session expirée, veuillez vous reconnecter.");
-                    // L'intercepteur de api.js devrait gérer la redirection ici.
                     break;
-                case 404:
+                case 404: 
                     setError("La ressource demandée n'a pas été trouvée. Assurez-vous que le backend est en cours d'exécution et que l'URL est correcte.");
                     break;
                 default:
@@ -39,43 +38,28 @@ const Ressources = () => {
         }
     };
 
-    // Effet pour récupérer les informations de l'utilisateur (y compris le statut premium)
     useEffect(() => {
         const fetchUserInfo = async () => {
             try {
-                // Récupère les infos utilisateur. Assurez-vous que votre backend renvoie le statut premium ici.
                 const res = await api.get('/auth/me'); 
-                setUserInfo(res.data);
-                // Si votre backend renvoie une propriété 'premium' pour l'utilisateur:
-                // setIsUserPremium(res.data.premium || false); 
-                // Pour l'exemple, nous allons simuler le statut premium pour les tests.
-                // REMPLACEZ CECI PAR LA VRAIE LOGIQUE DE RÉCUPÉRATION DU STATUT PREMIUM DE L'UTILISATEUR
-                setIsUserPremium(res.data.role === 'ADMIN'); // Exemple: ADMIN est premium
-                // Ou si vous avez un champ 'isPremium' dans votre UserDetails ou Entité Utilisateur:
-                // setIsUserPremium(res.data.isPremium || false); 
-
+                setIsUserPremium(res.data.role === 'PREMIUM' || res.data.role === 'ADMIN'); 
             } catch (err) {
                 console.warn("Impossible de récupérer les informations utilisateur (peut-être non connecté ou erreur API):", err);
-                // Si l'utilisateur n'est pas connecté, il ne sera pas premium.
                 setIsUserPremium(false); 
             } finally {
-                // Une fois les infos utilisateur (ou l'absence de celles-ci) traitées, on peut charger les fonctionnalités
                 fetchFonctionnalites();
             }
         };
 
         fetchUserInfo();
-    }, []); // S'exécute une seule fois au montage du composant
+    }, []); 
 
-    // Effet pour récupérer les fonctionnalités
-    const fetchFonctionnalites = async () => {
+    const fetchFonctionnalites = useCallback(async () => {
         setLoading(true);
         setError(null);
         try {
-            // Utilise l'instance 'api' et l'URL sans slash final pour correspondre au backend
             const res = await api.get('/fonctionnalites'); 
             if (Array.isArray(res.data)) {
-                // Filtrer pour n'afficher que les fonctionnalités "actives" (statut est un booléen)
                 setFonctionnalites(res.data.filter(f => f.statut === true));
             } else {
                 throw new Error("Format de données inattendu de l'API.");
@@ -85,114 +69,198 @@ const Ressources = () => {
         } finally {
             setLoading(false);
         }
+    }, []); 
+
+    const filteredAndGroupedFonctionnalites = useMemo(() => {
+        const filtered = fonctionnalites.filter(f => 
+            selectedCategory === 'all' || 
+            (selectedCategory === 'Autres' && !categoriesOrder.some(cat => cat.key === f.type)) ||
+            f.type === selectedCategory
+        );
+
+        const groups = {};
+        filtered.forEach(f => {
+            const typeKey = f.type || 'Autres'; 
+            if (!groups[typeKey]) {
+                groups[typeKey] = [];
+            }
+            groups[typeKey].push(f);
+        });
+
+        return Object.keys(groups).sort((a, b) => {
+            const indexA = categoriesOrder.findIndex(cat => cat.key === a);
+            const indexB = categoriesOrder.findIndex(cat => cat.key === b);
+            return (indexA === -1 ? categoriesOrder.length : indexA) - (indexB === -1 ? categoriesOrder.length : indexB);
+        }).reduce((acc, key) => {
+            acc[key] = groups[key];
+            return acc;
+        }, {});
+    }, [fonctionnalites, selectedCategory, categoriesOrder]);
+
+    const getCategoryTitle = (typeKey) => {
+        const category = categoriesOrder.find(cat => cat.key === typeKey);
+        return category ? category.title : typeKey;
     };
 
-    if (loading) {
-        return (
-            <Layout>
-                <div className="py-8 px-4 max-w-7xl mx-auto text-center">
-                    Chargement des ressources...
-                </div>
-            </Layout>
-        );
-    }
 
-    if (error) {
-        return (
-            <Layout>
-                <div className="py-8 px-4 max-w-7xl mx-auto text-center alert alert-danger">
-                    {error}
-                </div>
-            </Layout>
-        );
-    }
-
-    // Fonction pour rendre le contenu de la ressource ou un message d'accès
     const renderResourceContent = (fonctionnalite) => {
-        const { type, description, premium } = fonctionnalite;
+        const { type, description, premium, lienFichier } = fonctionnalite;
 
-        // Si la ressource est premium et l'utilisateur n'est PAS premium
         if (premium && !isUserPremium) {
             return (
-                <div className="mt-4 text-center text-red-500">
-                    <p>Contenu réservé aux membres Premium.</p>
+                <div className="mt-4 text-center p-4 bg-indigo-50 rounded-md text-indigo-800">
+                    <p className="font-semibold mb-2">Contenu Premium</p>
+                    <p>Ce contenu est réservé aux membres Premium.</p>
                     <button
-                        onClick={() => console.warn("Rediriger vers la page d'abonnement ou de connexion premium")}
-                        className="btn btn-warning mt-2"
+                        onClick={() => navigate('/devenir-premium')} // <-- Redirection vers la page Premium
+                        className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-md mt-3 shadow-md"
                     >
-                        Devenir Premium
+                        Devenir Membre Premium
                     </button>
                 </div>
             );
         }
 
-        // Si la ressource n'est pas premium, ou si l'utilisateur est premium
         switch (type) {
             case 'citation':
                 return (
-                    <blockquote className="mt-4 border-l-4 border-gray-200 pl-4 italic text-gray-600">
+                    <blockquote className="mt-4 border-l-4 border-indigo-200 pl-4 italic text-gray-600">
                         "{description}"
                     </blockquote>
                 );
             case 'video':
-            case 'article':
-            case 'podcast':
-            case 'outil':
-                // Assurez-vous que 'description' contient l'URL ou un ID pour ces types.
-                // Dans un cas réel, vous auriez probablement un champ 'url' ou 'content' dédié.
-                const linkText = {
-                    video: 'Regarder la vidéo',
-                    article: 'Lire l\'article',
-                    podcast: 'Écouter le podcast',
-                    outil: 'Utiliser l\'outil interactif'
-                }[type];
-
+                if (lienFichier && (lienFichier.includes('youtube.com') || lienFichier.includes('youtu.be'))) {
+                    const youtubeId = lienFichier.split('v=')[1] || lienFichier.split('/').pop();
+                    const embedUrl = `https://www.youtube.com/embed/${youtubeId}`;
+                    return (
+                        <div className="mt-4 aspect-w-16 aspect-h-9 w-full"> 
+                            <iframe
+                                className="w-full h-auto rounded-md"
+                                src={embedUrl}
+                                title={fonctionnalite.nom}
+                                frameBorder="0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowFullScreen
+                            ></iframe>
+                        </div>
+                    );
+                }
                 return (
                     <div className="mt-4">
-                        <p className="text-blue-500 hover:underline">
-                            <a href={description} target="_blank" rel="noopener noreferrer">
-                                {linkText}
+                        <p className="text-gray-700 whitespace-pre-wrap">{description}</p>
+                        {lienFichier && (
+                            <a href={lienFichier} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline mt-2 inline-block">
+                                Regarder la vidéo
                             </a>
-                        </p>
+                        )}
+                    </div>
+                );
+            case 'podcast':
+                if (lienFichier && lienFichier.includes('soundcloud.com/')) {
+                    return (
+                        <div className="mt-4">
+                            <p className="text-gray-700 whitespace-pre-wrap">{description}</p>
+                            <audio controls className="w-full mt-2 rounded-md">
+                                <source src={lienFichier} type="audio/mpeg" />
+                                Votre navigateur ne supporte pas l'élément audio.
+                            </audio>
+                            <a href={lienFichier} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline mt-2 inline-block">
+                                Écouter sur SoundCloud
+                            </a>
+                        </div>
+                    );
+                }
+                return (
+                    <div className="mt-4">
+                        <p className="text-gray-700 whitespace-pre-wrap">{description}</p>
+                        {lienFichier && (
+                            <a href={lienFichier} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline mt-2 inline-block">
+                                Écouter le podcast
+                            </a>
+                        )}
+                    </div>
+                );
+            case 'article':
+            case 'guide_pratique':
+            case 'journaling_prompt':
+            case 'exercice_texte':
+            case 'challenge':
+            case 'outil':
+                return (
+                    <div className="mt-4">
+                        <p className="text-gray-700 whitespace-pre-wrap">{description}</p>
+                        {lienFichier && (
+                            <a href={lienFichier} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline mt-2 inline-block">
+                                {type === 'outil' ? 'Accéder à l\'outil' : 'En savoir plus'}
+                                <svg className="inline-block w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                            </a>
+                        )}
                     </div>
                 );
             default:
-                return null; // Gérer les types inconnus ou sans rendu spécifique
+                return <p className="text-gray-700 mt-4 whitespace-pre-wrap">{description}</p>;
         }
     };
 
     return (
         <Layout>
             <div className="py-8 px-4 max-w-7xl mx-auto">
-                <h1 className="text-3xl font-bold text-gray-800 mb-6">Ressources éducatives</h1>
+                <h1 className="text-3xl font-bold text-gray-800 mb-6">Bibliothèque de Ressources</h1>
 
-                {/* Message pour l'utilisateur non premium s'il y a des ressources premium */}
-                {!isUserPremium && fonctionnalites.some(f => f.premium) && (
-                    <div className="alert alert-info mb-4">
-                        Certaines ressources sont réservées aux membres Premium. <a href="#" className="alert-link">Découvrez nos offres !</a>
+                {error && (
+                    <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
+                        {error}
                     </div>
                 )}
 
-                {fonctionnalites.length === 0 ? (
-                    <div className="alert alert-info text-center">
+                {/* Message pour l'utilisateur non premium s'il y a des ressources premium */}
+                {!isUserPremium && fonctionnalites.some(f => f.premium) && (
+                    <div className="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded relative mb-4 text-center">
+                        Certaines ressources sont réservées aux membres Premium. <a href="/devenir-premium" className="font-semibold underline">Découvrez nos offres !</a>
+                    </div>
+                )}
+
+                {loading ? (
+                    <div className="py-8 px-4 max-w-7xl mx-auto text-center">
+                        Chargement des ressources...
+                    </div>
+                ) : Object.keys(fonctionnalites).length === 0 ? ( 
+                    <div className="bg-gray-100 border border-gray-400 text-gray-700 px-4 py-3 rounded relative text-center">
                         Aucune ressource disponible pour le moment.
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {fonctionnalites.map((f) => (
-                            <div key={f.id} className="bg-white rounded-lg shadow-md p-6">
-                                <h2 className="text-xl font-semibold text-gray-900 mb-2">{f.nom}</h2>
-                                <p className="text-gray-700 mb-4">{f.description.length > 100 && f.premium && !isUserPremium ? `${f.description.substring(0, 100)}...` : f.description}</p>
-                                <div className="flex justify-between items-center text-sm text-gray-500 mb-2">
-                                    <span>Type: <span className="font-medium">{f.type}</span></span>
-                                    {f.premium && (
-                                        <span className="bg-yellow-100 text-yellow-800 text-xs font-semibold px-2.5 py-0.5 rounded">
-                                            Premium
-                                        </span>
-                                    )}
+                    <div className="space-y-8"> 
+                        {Object.keys(filteredAndGroupedFonctionnalites).map(typeKey => (
+                            <section key={typeKey} className="bg-white p-6 rounded-lg shadow-md">
+                                <h2 className="text-2xl font-bold text-gray-800 mb-4 pb-2 border-b border-gray-200">
+                                    {getCategoryTitle(typeKey)}
+                                </h2>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {filteredAndGroupedFonctionnalites[typeKey].map((f) => (
+                                        <div key={f.id} className="bg-white rounded-lg shadow-md p-6 border border-gray-200 flex flex-col">
+                                            <div className="flex justify-between items-start mb-2">
+                                                <h3 className="text-xl font-semibold text-gray-900 leading-tight pr-2">{f.nom}</h3>
+                                                {f.premium && (
+                                                    <span className="bg-yellow-100 text-yellow-800 text-xs font-semibold px-2.5 py-0.5 rounded-full whitespace-nowrap">
+                                                        Premium
+                                                    </span>
+                                                )}
+                                            </div>
+                                            
+                                            <p className="text-gray-700 mb-4 flex-grow">
+                                                {f.premium && !isUserPremium 
+                                                    ? `${f.description ? f.description.substring(0, Math.min(f.description.length, 120)) : ''}...`
+                                                    : f.description
+                                                }
+                                            </p>
+                                            
+                                            <div className="mt-auto"> 
+                                                {renderResourceContent(f)}
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>
-                                {renderResourceContent(f)}
-                            </div>
+                            </section>
                         ))}
                     </div>
                 )}
