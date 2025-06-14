@@ -1,28 +1,31 @@
 // src/services/serviceAuth.js
-import api from './api'; // Importe l'instance 'api' centralisée
+import api from './api'; 
+
+const USER_INFO_KEY = 'currentUserInfo'; 
 
 export const login = async (email, motDePasse) => {
     console.log(`serviceAuth: Tentative de connexion pour ${email} vers ${api.defaults.baseURL}/auth/login`);
     try {
         const response = await api.post('/auth/login', { email, motDePasse });
-        console.log("serviceAuth: Connexion réussie, réponse du backend:", response.data);
+        // --- POINT CRITIQUE DE DÉBOGAGE ---
+        // VÉRIFIEZ CE LOG DANS VOTRE CONSOLE APRÈS LA CONNEXION.
+        // L'objet 'response.data' DOIT contenir un champ 'id'.
+        // Exemple attendu : { id: 123, email: "user@example.com", role: "USER", nom: "Doe", prenom: "John" }
+        console.log("serviceAuth: Connexion réussie, backend response.data:", response.data); 
 
-        // --- PARTIE À AJOUTER OU MODIFIER ---
-        // Assurez-vous que votre backend renvoie le rôle dans `response.data.role`
-        if (response.data && response.data.role) {
-            const backendRole = response.data.role; // Ex: "ROLE_ADMIN", "ROLE_USER"
-            // Nettoyer le rôle si nécessaire (retirer le préfixe "ROLE_")
-            const cleanedRole = backendRole.startsWith('ROLE_') ? backendRole.substring(5) : backendRole;
-            localStorage.setItem('role', cleanedRole); // <-- C'est la ligne clé !
-            console.log(`serviceAuth: Rôle '${cleanedRole}' stocké dans localStorage.`);
+        const userInfo = response.data; 
+
+        if (userInfo && userInfo.id && userInfo.email && userInfo.role) { 
+            localStorage.setItem(USER_INFO_KEY, JSON.stringify(userInfo));
+            console.log(`serviceAuth: Informations utilisateur complètes (ID: ${userInfo.id}, Role: ${userInfo.role}) stockées dans localStorage.`);
         } else {
-            console.warn("serviceAuth: La réponse de connexion du backend ne contient pas de rôle.");
-            // Gérer ce cas si le rôle n'est pas toujours renvoyé
-            // Par exemple, vous pourriez vouloir déconnecter l'utilisateur ou le rediriger.
+            console.warn("serviceAuth: La réponse de connexion du backend est incomplète (manque ID, email ou rôle). Stockage des informations partielles.", userInfo);
+            // Si 'id' est manquant ici, c'est que le backend ne l'envoie pas.
+            // C'est la source de l'erreur "User ID not available".
+            localStorage.setItem(USER_INFO_KEY, JSON.stringify(userInfo)); 
         }
-        // --- FIN DE LA PARTIE À AJOUTER OU MODIFIER ---
 
-        return response.data; // Retourne les données complètes de la réponse du backend
+        return userInfo; 
     } catch (error) {
         console.error("serviceAuth: Erreur de connexion:", error.response ? error.response.data : error.message, error);
         throw error;
@@ -34,15 +37,25 @@ export const logout = async () => {
     try {
         await api.post('/auth/logout');
         console.log("serviceAuth: Requête de déconnexion envoyée avec succès au backend.");
-
-        localStorage.removeItem('role'); // Correct : supprime le rôle lors de la déconnexion
-        console.log("serviceAuth: 'role' supprimé de localStorage.");
-
     } catch (error) {
-        console.error("serviceAuth: Erreur de déconnexion:", error.response ? error.response.data : error.message, error);
-        // En cas d'erreur de déconnexion du backend, il est toujours sage de nettoyer le localstorage
-        localStorage.removeItem('role');
-        console.log("serviceAuth: 'role' supprimé de localStorage même en cas d'erreur de requête.");
-        throw error;
+        console.error("serviceAuth: Erreur lors de la déconnexion backend:", error.response ? error.response.data : error.message, error);
+    } finally {
+        localStorage.removeItem(USER_INFO_KEY); 
+        console.log("serviceAuth: Informations utilisateur effacées de localStorage.");
     }
+};
+
+export const getCurrentUserInfo = () => {
+    const userInfoString = localStorage.getItem(USER_INFO_KEY);
+    if (userInfoString) {
+        try {
+            const userInfo = JSON.parse(userInfoString);
+            return userInfo;
+        } catch (e) {
+            console.error("serviceAuth: Erreur lors de l'analyse des informations utilisateur depuis localStorage:", e);
+            localStorage.removeItem(USER_INFO_KEY); 
+            return null;
+        }
+    }
+    return null;
 };

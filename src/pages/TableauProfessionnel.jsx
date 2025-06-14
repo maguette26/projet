@@ -1,188 +1,229 @@
 // src/pages/TableauProfessionnel.jsx
 import React, { useState, useEffect } from 'react';
+import Layout from '../components/commun/Layout';
+import { getCurrentUserInfo } from '../services/serviceAuth';
 import { useNavigate } from 'react-router-dom';
-import FormulaireDisponibilite from '../components/professionel/FormulaireDisponibilite';
-import Messagerie from '../components/professionel/Messagerie';
-// Importez les fonctions API nécessaires
-import {
-    ajouterDisponibilite,
-    getDisponibilites,
-    modifierDisponibilite,
-    supprimerDisponibilite
-} from '../services/servicePsy'; // Assurez-vous que le chemin est correct
-import reservationService from '../services/reservationService'; // Importez le service de réservation
+import { 
+    getDisponibilites, 
+    ajouterDisponibilite, 
+    modifierDisponibilite, 
+    supprimerDisponibilite 
+} from '../services/servicePsy'; // Importer les fonctions du service PROFESSIONNEL
 
 const TableauProfessionnel = () => {
-    const [activeSection, setActiveSection] = useState('tableauDeBord');
-    const [disponibilites, setDisponibilites] = useState([]); // État pour stocker les disponibilités
-    const [disponibiliteAModifier, setDisponibiliteAModifier] = useState(null); // Pour l'édition
-    const [proReservations, setProReservations] = useState([]); // Nouvel état pour les réservations du pro
-    const [loadingProReservations, setLoadingProReservations] = useState(false);
-    const [errorProReservations, setErrorProReservations] = useState(null);
-
+    const [currentUser, setCurrentUser] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [globalError, setGlobalError] = useState(null);
+    const [disponibilites, setDisponibilites] = useState([]);
+    const [showDispoModal, setShowDispoModal] = useState(false); 
+    const [currentDispo, setCurrentDispo] = useState(null); 
+    const [activeTab, setActiveTab] = useState('informations'); // Nouvel état pour les onglets: 'informations', 'disponibilites', 'reservations', 'consultations', 'profil'
     const navigate = useNavigate();
 
-    // Simule la récupération de l'ID professionnel connecté (à remplacer par votre logique d'auth réelle)
-    const getAuthenticatedProId = () => {
-        // Dans une application réelle, cet ID viendrait du contexte d'authentification,
-        // d'un token JWT décodé, ou d'un appel à /api/auth/me après connexion.
-        // Pour cet exemple, nous utilisons un ID fictif.
-        // Si vous utilisez votre endpoint /api/auth/me, il faudrait le récupérer ainsi:
-        // const profile = await getProfil(); // Si vous avez un service pour le profil du pro
-        // return profile.id;
-        return 50; // ID professionnel fictif pour le test
-    };
+    // États pour le formulaire de disponibilité
+    const [dispoDate, setDispoDate] = useState('');
+    const [dispoHeureDebut, setDispoHeureDebut] = useState('');
+    const [dispoHeureFin, setDispoHeureFin] = useState('');
 
-    // Fonction pour charger les disponibilités au montage du composant et quand nécessaire
+    // Message de succès/erreur général pour les opérations CRUD sur disponibilités
+    const [message, setMessage] = useState('');
+    useEffect(() => {
+        if (message) {
+            const timer = setTimeout(() => {
+                setMessage('');
+            }, 5000);
+            return () => clearTimeout(timer);
+        }
+    }, [message]);
+
+    // Charger l'utilisateur connecté et ses disponibilités au démarrage
+    useEffect(() => {
+        const fetchProfessionalData = async () => {
+            try {
+                const user = getCurrentUserInfo();
+                if (!user || !(user.role === 'PSYCHOLOGUE' || user.role === 'PSYCHIATRE')) {
+                    setGlobalError("Accès refusé : Vous n'êtes pas un professionnel de santé mentale ou non connecté.");
+                    navigate('/connexion'); // Rediriger si non autorisé
+                } else {
+                    setCurrentUser(user);
+                    await fetchDisponibilites(); // Charger les disponibilités du professionnel
+                    setGlobalError(null);
+                }
+            } catch (err) {
+                console.error("Erreur lors du chargement des données du professionnel:", err);
+                setGlobalError("Impossible de charger le tableau de bord. " + (err.response?.data?.message || err.message));
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchProfessionalData();
+    }, [navigate]); // navigate est une dépendance stable
+
+    // Fonction pour récupérer les disponibilités (peut être appelée après ajout/modif/suppression)
     const fetchDisponibilites = async () => {
         try {
-            const data = await getDisponibilites();
-            setDisponibilites(data);
-        } catch (error) {
-            console.error("Erreur lors du chargement des disponibilités :", error);
-            alert("Impossible de charger les disponibilités.");
-        }
-    };
-
-    // Charger les réservations du professionnel
-    const fetchProReservations = async () => {
-        setLoadingProReservations(true);
-        setErrorProReservations(null);
-        try {
-            const proId = getAuthenticatedProId(); // Récupérer l'ID du professionnel connecté
-            const data = await reservationService.getReservationsForProfessional(proId);
-            setProReservations(data);
+            // Pas de setLoading(true) ici car déjà géré par fetchProfessionalData au global
+            const data = await getDisponibilites(); 
+            const sortedData = data.sort((a, b) => {
+                const dateA = new Date(`${a.date}T${a.heureDebut}`);
+                const dateB = new Date(`${b.date}T${b.heureDebut}`);
+                return dateA - dateB;
+            });
+            setDisponibilites(sortedData);
         } catch (err) {
-            console.error("Erreur lors du chargement des réservations du professionnel:", err);
-            setErrorProReservations("Impossible de charger les réservations.");
-        } finally {
-            setLoadingProReservations(false);
+            console.error("Erreur lors du chargement des disponibilités:", err);
+            // Afficher l'erreur spécifique pour cette section si nécessaire, ou globalement
+            setGlobalError("Impossible de charger les disponibilités. " + (err.response?.data || err.message));
         }
     };
 
-    useEffect(() => {
-        if (activeSection === 'disponibilites') {
-            fetchDisponibilites();
-        } else if (activeSection === 'gestionReservations') { // Charger les réservations quand cette section est active
-            fetchProReservations();
-        }
-    }, [activeSection]);
+    const handleAddOrUpdateDispo = async (e) => {
+        e.preventDefault();
+        setGlobalError(null); // Réinitialiser les erreurs générales
 
-    // Gère la soumission du formulaire d'ajout/modification de disponibilité
-    const handleSaveDisponibilite = async (dispoData) => {
+        if (!dispoDate || !dispoHeureDebut || !dispoHeureFin) {
+            setGlobalError("Veuillez remplir tous les champs de la disponibilité.");
+            return;
+        }
+
+        const newDispoData = {
+            date: dispoDate,
+            heureDebut: dispoHeureDebut,
+            heureFin: dispoHeureFin,
+        };
+
         try {
-            if (disponibiliteAModifier) {
-                await modifierDisponibilite(disponibiliteAModifier.id, dispoData);
-                alert("Disponibilité modifiée avec succès !");
+            if (currentDispo) {
+                await modifierDisponibilite(currentDispo.id, newDispoData);
+                setMessage("Disponibilité modifiée avec succès !");
             } else {
-                await ajouterDisponibilite(dispoData);
-                alert("Disponibilité ajoutée avec succès !");
+                await ajouterDisponibilite(newDispoData);
+                setMessage("Disponibilité ajoutée avec succès !");
             }
-            fetchDisponibilites();
-            setDisponibiliteAModifier(null);
-        } catch (error) {
-            console.error("Erreur lors de la sauvegarde de la disponibilité :", error);
-            alert("Erreur lors de la sauvegarde de la disponibilité : " + (error.response?.data || error.message));
+            fetchDisponibilites(); 
+            setShowDispoModal(false); 
+            resetDispoForm(); 
+        } catch (err) {
+            console.error("Erreur lors de l'opération sur la disponibilité:", err);
+            setGlobalError("Opération échouée: " + (err.response?.data?.message || err.message));
         }
     };
 
-    // Gère la suppression d'une disponibilité
-    const handleDeleteDisponibilite = async (id) => {
+    const handleDeleteDispo = async (id) => {
         if (window.confirm("Êtes-vous sûr de vouloir supprimer cette disponibilité ?")) {
             try {
                 await supprimerDisponibilite(id);
-                alert("Disponibilité supprimée avec succès !");
-                fetchDisponibilites();
-            } catch (error) {
-                console.error("Erreur lors de la suppression de la disponibilité :", error);
-                alert("Erreur lors de la suppression de la disponibilité : " + (error.response?.data || error.message));
-            }
-        }
-    };
-
-    // Gère la validation ou le refus d'une réservation
-    const handleUpdateReservationStatus = async (reservationId, statut) => {
-        if (window.confirm(`Êtes-vous sûr de vouloir ${statut === 'VALIDE' ? 'valider' : 'refuser'} cette réservation ?`)) {
-            try {
-                // Le backend vérifie l'autorisation via @AuthenticationPrincipal
-                await reservationService.updateReservationStatus(reservationId, statut);
-                alert(`Réservation ${statut === 'VALIDE' ? 'validée' : 'refusée'} avec succès !`);
-                fetchProReservations(); // Recharger les réservations après modification
+                setMessage("Disponibilité supprimée avec succès !");
+                fetchDisponibilites(); 
             } catch (err) {
-                console.error(`Erreur lors de la mise à jour du statut de la réservation (${statut}):`, err);
-                alert(`Erreur lors de la mise à jour du statut : ${err.response?.data || err.message}`);
+                console.error("Erreur lors de la suppression de la disponibilité:", err);
+                setGlobalError("Suppression échouée: " + (err.response?.data?.message || err.message));
             }
         }
     };
 
-    // Gère la déconnexion du professionnel
-    const handleLogout = () => {
-        localStorage.removeItem('role');
-        // Idéalement, faire aussi un appel de déconnexion au backend ici si nécessaire
-        navigate('/connexion');
+    const openAddDispoModal = () => {
+        setCurrentDispo(null); 
+        resetDispoForm();
+        setShowDispoModal(true);
     };
 
-    // Fonction pour rendre le composant de la section active
+    const openEditDispoModal = (dispo) => {
+        setCurrentDispo(dispo);
+        setDispoDate(dispo.date);
+        setDispoHeureDebut(dispo.heureDebut);
+        setDispoHeureFin(dispo.heureFin);
+        setShowDispoModal(true);
+    };
+
+    const resetDispoForm = () => {
+        setDispoDate('');
+        setDispoHeureDebut('');
+        setDispoHeureFin('');
+        setGlobalError(null); 
+    };
+
+    if (loading) {
+        return <Layout><div className="text-center py-8 text-gray-600">Chargement du tableau de bord professionnel...</div></Layout>;
+    }
+
+    if (globalError && !currentUser) { // Affiche l'erreur principale si non connecté ou rôle incorrect
+        return (
+            <Layout>
+                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mx-auto my-8 max-w-xl">
+                    {globalError}
+                </div>
+            </Layout>
+        );
+    }
+    
+    // Convertir les rôles PSYCHOLOGUE/PSYCHIATRE en français pour l'affichage
+    const roleFr = currentUser?.role === 'PSYCHOLOGUE' ? 'Psychologue' : 
+                   currentUser?.role === 'PSYCHIATRE' ? 'Psychiatre' : currentUser?.role;
+
+    // Fonction de rendu des sections basée sur l'onglet actif
     const renderSection = () => {
-        switch (activeSection) {
-            case 'tableauDeBord':
+        switch (activeTab) {
+            case 'informations':
                 return (
-                    <div className="p-6 bg-white rounded-lg shadow">
-                        <h2 className="text-2xl font-semibold text-gray-800 mb-4">Aperçu de votre Tableau de Bord</h2>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="bg-purple-100 p-4 rounded-md text-purple-800">Prochains Rendez-vous: 3</div>
-                            <div className="bg-teal-100 p-4 rounded-md text-teal-800">Messages Non Lus: 5</div>
-                            <div className="bg-orange-100 p-4 rounded-md text-orange-800">Disponibilités définies: {disponibilites.length}</div>
-                            {/* Ajoutez d'autres widgets pertinents ici */}
-                        </div>
+                    <div className="bg-white p-6 rounded-lg shadow-md mb-6">
+                        <h2 className="text-2xl font-semibold text-gray-700 mb-4">Mes Informations Personnelles</h2>
+                        <p><strong>Nom:</strong> {currentUser?.nom} {currentUser?.prenom}</p>
+                        <p><strong>Email:</strong> {currentUser?.email}</p>
+                        <p><strong>Téléphone:</strong> {currentUser?.telephone}</p>
+                        <p><strong>Spécialité:</strong> {currentUser?.specialite}</p> 
+                        {/* Ajoutez d'autres informations du professionnel ici */}
                     </div>
                 );
             case 'disponibilites':
                 return (
-                    <section className="bg-white shadow-lg rounded-lg p-6">
-                        <h2 className="text-xl sm:text-2xl font-semibold text-gray-700 mb-4 pb-3 border-b border-gray-200">
-                            Gérer mes disponibilités
+                    <div className="bg-white p-6 rounded-lg shadow-md">
+                        <h2 className="text-2xl font-semibold text-gray-700 mb-4">
+                            Gestion de mes Disponibilités
+                            <button 
+                                onClick={openAddDispoModal} 
+                                className="ml-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-md text-sm transition duration-200"
+                            >
+                                + Ajouter une disponibilité
+                            </button>
                         </h2>
-                        <h3 className="text-lg font-medium text-gray-700 mb-3">
-                            {disponibiliteAModifier ? "Modifier une disponibilité" : "Ajouter une nouvelle disponibilité"}
-                        </h3>
-                        <FormulaireDisponibilite
-                            onSubmit={handleSaveDisponibilite}
-                            disponibiliteInitiale={disponibiliteAModifier}
-                            onCancel={() => setDisponibiliteAModifier(null)}
-                        />
-
-                        <h3 className="text-lg font-medium text-gray-700 mt-8 mb-3 pb-2 border-b border-gray-200">
-                            Mes disponibilités existantes
-                        </h3>
+                        
                         {disponibilites.length === 0 ? (
-                            <p className="text-gray-600">Aucune disponibilité définie pour le moment.</p>
+                            <p className="text-gray-600">Aucune disponibilité enregistrée pour le moment.</p>
                         ) : (
                             <div className="overflow-x-auto">
                                 <table className="min-w-full divide-y divide-gray-200">
                                     <thead className="bg-gray-50">
                                         <tr>
-                                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Heure Début</th>
-                                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Heure Fin</th>
-                                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Heure Début</th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Heure Fin</th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody className="bg-white divide-y divide-gray-200">
-                                        {disponibilites.map((dispo) => (
+                                        {disponibilites.map(dispo => (
                                             <tr key={dispo.id}>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{dispo.date}</td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{dispo.heureDebut}</td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{dispo.heureFin}</td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                                    <button
-                                                        onClick={() => setDisponibiliteAModifier(dispo)}
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                                        dispo.reservee ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'
+                                                    }`}>
+                                                        {dispo.reservee ? 'Réservée' : 'Disponible'}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                                    <button 
+                                                        onClick={() => openEditDispoModal(dispo)}
                                                         className="text-indigo-600 hover:text-indigo-900 mr-3"
                                                     >
                                                         Modifier
                                                     </button>
-                                                    <button
-                                                        onClick={() => handleDeleteDisponibilite(dispo.id)}
+                                                    <button 
+                                                        onClick={() => handleDeleteDispo(dispo.id)}
                                                         className="text-red-600 hover:text-red-900"
                                                     >
                                                         Supprimer
@@ -194,158 +235,178 @@ const TableauProfessionnel = () => {
                                 </table>
                             </div>
                         )}
-                    </section>
+                    </div>
                 );
-            case 'messagerie':
+            case 'reservations':
                 return (
-                    <section className="p-6 bg-white rounded-lg shadow">
-                        <h2 className="text-2xl font-semibold text-gray-800 mb-4">Ma Messagerie</h2>
-                        <Messagerie />
-                    </section>
+                    <div className="bg-white p-6 rounded-lg shadow-md">
+                        <h2 className="text-2xl font-semibold text-gray-700 mb-4">Mes Réservations Reçues</h2>
+                        <p className="text-gray-600">
+                            Contenu pour la gestion des réservations reçues par le professionnel (à implémenter).
+                        </p>
+                    </div>
                 );
-            case 'gestionReservations': // Nouvelle section pour la gestion des réservations du professionnel
+            case 'consultations':
                 return (
-                    <section className="bg-white shadow-lg rounded-lg p-6">
-                        <h2 className="text-xl sm:text-2xl font-semibold text-gray-700 mb-4 pb-3 border-b border-gray-200">
-                            Gestion des Réservations
-                        </h2>
-                        {loadingProReservations ? (
-                            <p>Chargement des réservations...</p>
-                        ) : errorProReservations ? (
-                            <p className="text-red-500">{errorProReservations}</p>
-                        ) : proReservations.length === 0 ? (
-                            <p className="text-gray-600">Aucune réservation pour le moment.</p>
-                        ) : (
-                            <div className="overflow-x-auto">
-                                <table className="min-w-full divide-y divide-gray-200">
-                                    <thead className="bg-gray-50">
-                                        <tr>
-                                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Utilisateur</th>
-                                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
-                                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Prix</th>
-                                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="bg-white divide-y divide-gray-200">
-                                        {proReservations.map((res) => (
-                                            <tr key={res.id}>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                    {new Date(res.dateReservation).toLocaleString()}
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                    {res.utilisateur ? `${res.utilisateur.prenom} ${res.utilisateur.nom}` : 'N/A'}
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{res.statut}</td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{res.prix ? `${res.prix} €` : 'N/A'}</td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                                    {res.statut === 'EN_ATTENTE' && (
-                                                        <>
-                                                            <button
-                                                                onClick={() => handleUpdateReservationStatus(res.id, 'VALIDE')}
-                                                                className="text-green-600 hover:text-green-900 mr-3"
-                                                            >
-                                                                Valider
-                                                            </button>
-                                                            <button
-                                                                onClick={() => handleUpdateReservationStatus(res.id, 'REFUSE')}
-                                                                className="text-red-600 hover:text-red-900"
-                                                            >
-                                                                Refuser
-                                                            </button>
-                                                        </>
-                                                    )}
-                                                    {res.statut !== 'EN_ATTENTE' && (
-                                                        <span className="text-gray-500 italic">Déjà traitée</span>
-                                                    )}
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        )}
-                    </section>
+                    <div className="bg-white p-6 rounded-lg shadow-md">
+                        <h2 className="text-2xl font-semibold text-gray-700 mb-4">Mes Consultations Passées</h2>
+                        <p className="text-gray-600">
+                            Contenu pour l'historique des consultations du professionnel (à implémenter).
+                        </p>
+                    </div>
+                );
+            case 'profil':
+                return (
+                    <div className="bg-white p-6 rounded-lg shadow-md">
+                        <h2 className="text-2xl font-semibold text-gray-700 mb-4">Modifier mon Profil</h2>
+                        <p className="text-gray-600">
+                            Contenu pour la modification du profil du professionnel (à implémenter, similaire à FormulaireProfil pour l'utilisateur).
+                        </p>
+                    </div>
                 );
             default:
-                return <div className="p-6 text-center text-gray-600">Sélectionnez une option dans le menu latéral.</div>;
+                return null;
         }
     };
 
     return (
-        <div className="flex h-screen bg-gray-100">
-            {/* Sidebar (Barre latérale de navigation) */}
-            <aside className="w-64 bg-green-700 text-white flex flex-col h-full shadow-lg">
-                <div className="p-6 text-center text-2xl font-bold border-b border-green-600">
-                    <span className="text-green-200">Psy</span><span className="text-white">Connect</span> Pro
-                </div>
-                <nav className="flex-grow mt-6">
-                    <ul>
-                        <li className="mb-2">
-                            <button
-                                className={`w-full text-left px-6 py-3 flex items-center transition-colors duration-200 ${activeSection === 'tableauDeBord' ? 'bg-green-600 text-white' : 'hover:bg-green-800'}`}
-                                onClick={() => setActiveSection('tableauDeBord')}
-                            >
-                                <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0h6m-6 0h-2a1 1 0 00-1 1v2a1 1 0 001 1h2m-6-6h-2a1 1 0 00-1 1v2a1 1 0 001 1h2"></path></svg>
-                                Tableau de bord
-                            </button>
-                        </li>
-                        <li className="mb-2">
-                            <button
-                                className={`w-full text-left px-6 py-3 flex items-center transition-colors duration-200 ${activeSection === 'disponibilites' ? 'bg-green-600 text-white' : 'hover:bg-green-800'}`}
-                                onClick={() => setActiveSection('disponibilites')}
-                            >
-                                <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                                Mes disponibilités
-                            </button>
-                        </li>
-                        <li className="mb-2">
-                            <button
-                                className={`w-full text-left px-6 py-3 flex items-center transition-colors duration-200 ${activeSection === 'messagerie' ? 'bg-green-600 text-white' : 'hover:bg-green-800'}`}
-                                onClick={() => setActiveSection('messagerie')}
-                            >
-                                <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>
-                                Messagerie
-                            </button>
-                        </li>
-                        <li className="mb-2">
-                            <button
-                                className={`w-full text-left px-6 py-3 flex items-center transition-colors duration-200 ${activeSection === 'gestionReservations' ? 'bg-green-600 text-white' : 'hover:bg-green-800'}`}
-                                onClick={() => setActiveSection('gestionReservations')}
-                            >
-                                <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2H7a2 2 0 00-2 2v2m7-7V3m0 0L9 6m3-3l3 3"></path></svg>
-                                Réservations
-                            </button>
-                        </li>
-                    </ul>
-                </nav>
-                <div className="p-4 border-t border-green-600 mt-auto">
-                    <button
-                        onClick={handleLogout}
-                        className="w-full bg-green-600 hover:bg-green-800 text-white py-2 rounded-md transition duration-200 flex items-center justify-center"
-                    >
-                        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
-                        Se Déconnecter
-                    </button>
-                </div>
-            </aside>
+        <Layout>
+            <div className="py-8 px-4 max-w-7xl mx-auto font-sans">
+                <h1 className="text-3xl font-bold text-gray-800 mb-6">
+                    Tableau de Bord Professionnel ({roleFr})
+                </h1>
 
-            {/* Main Content Area (Zone de contenu principal) */}
-            <div className="flex-1 flex flex-col overflow-hidden">
-                <header className="flex justify-between items-center p-6 bg-white border-b border-gray-200 shadow-sm">
-                    <h1 className="text-3xl font-bold text-gray-800">
-                        {activeSection === 'disponibilites' ? 'Gestion des Disponibilités' :
-                            activeSection === 'tableauDeBord' ? 'Tableau de Bord Professionnel' :
-                                activeSection === 'messagerie' ? 'Messagerie' :
-                                    activeSection === 'gestionReservations' ? 'Gestion des Réservations' : // Titre dynamique
-                                        'Espace Professionnel'}
-                    </h1>
-                </header>
-                <main className="flex-1 overflow-x-hidden overflow-y-auto p-6">
-                    {renderSection()}
-                </main>
+                {globalError && ( // Affiche les erreurs globales en dehors du modal
+                    <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
+                        {globalError}
+                    </div>
+                )}
+                {message && ( // Affiche les messages de succès/erreur spécifiques aux opérations
+                    <div className={`mb-4 px-4 py-2 rounded-md ${message.includes('succès') ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                        {message}
+                    </div>
+                )}
+
+                {/* Barre d'onglets */}
+                <div className="mb-6 border-b border-gray-200">
+                    <nav className="-mb-px flex space-x-8">
+                        <button
+                            onClick={() => setActiveTab('informations')}
+                            className={`whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
+                                activeTab === 'informations'
+                                    ? 'border-indigo-500 text-indigo-600'
+                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                            }`}
+                        >
+                            Mes Informations
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('disponibilites')}
+                            className={`whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
+                                activeTab === 'disponibilites'
+                                    ? 'border-indigo-500 text-indigo-600'
+                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                            }`}
+                        >
+                            Mes Disponibilités
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('reservations')}
+                            className={`whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
+                                activeTab === 'reservations'
+                                    ? 'border-indigo-500 text-indigo-600'
+                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                            }`}
+                        >
+                            Mes Réservations
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('consultations')}
+                            className={`whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
+                                activeTab === 'consultations'
+                                    ? 'border-indigo-500 text-indigo-600'
+                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                            }`}
+                        >
+                            Mes Consultations
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('profil')}
+                            className={`whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
+                                activeTab === 'profil'
+                                    ? 'border-indigo-500 text-indigo-600'
+                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                            }`}
+                        >
+                            Modifier mon Profil
+                        </button>
+                    </nav>
+                </div>
+
+                {/* Contenu des onglets */}
+                {renderSection()}
+
+                {/* Modal pour Ajouter/Modifier une Disponibilité (reste en dehors de renderSection car c'est un overlay) */}
+                {showDispoModal && (
+                    <div className="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50">
+                        <div className="bg-white p-8 rounded-lg shadow-xl max-w-md w-full">
+                            <h3 className="text-xl font-bold text-gray-800 mb-4">{currentDispo ? "Modifier la disponibilité" : "Ajouter une nouvelle disponibilité"}</h3>
+                            <form onSubmit={handleAddOrUpdateDispo} className="space-y-4">
+                                <div>
+                                    <label htmlFor="dispoDate" className="block text-sm font-medium text-gray-700">Date</label>
+                                    <input
+                                        type="date"
+                                        id="dispoDate"
+                                        value={dispoDate}
+                                        onChange={(e) => setDispoDate(e.target.value)}
+                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                        required
+                                    />
+                                </div>
+                                <div>
+                                    <label htmlFor="dispoHeureDebut" className="block text-sm font-medium text-gray-700">Heure de début</label>
+                                    <input
+                                        type="time"
+                                        id="dispoHeureDebut"
+                                        value={dispoHeureDebut}
+                                        onChange={(e) => setDispoHeureDebut(e.target.value)}
+                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                        required
+                                    />
+                                </div>
+                                <div>
+                                    <label htmlFor="dispoHeureFin" className="block text-sm font-medium text-gray-700">Heure de fin</label>
+                                    <input
+                                        type="time"
+                                        id="dispoHeureFin"
+                                        value={dispoHeureFin}
+                                        onChange={(e) => setDispoHeureFin(e.target.value)}
+                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                        required
+                                    />
+                                </div>
+                                {globalError && <p className="text-red-500 text-sm">{globalError}</p>} {/* Affiche l'erreur du modal */}
+                                <div className="flex justify-end space-x-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => { setShowDispoModal(false); resetDispoForm(); }}
+                                        className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                                    >
+                                        Annuler
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    >
+                                        {currentDispo ? "Modifier" : "Ajouter"}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                )}
             </div>
-        </div>
+        </Layout>
     );
 };
 

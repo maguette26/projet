@@ -9,7 +9,7 @@ export default defineConfig({
       // Toutes les requêtes qui commencent par '/api'
       // seront redirigées vers votre backend.
       '/api': {
-        target: 'http://192.168.1.128:9191', // <--- Assurez-vous que C'EST L'ADRESSE IP DE VOTRE BACKEND
+        target: 'http://192.168.1.151:9191', // <--- Assurez-vous que C'EST L'ADRESSE IP DE VOTRE BACKEND
         changeOrigin: true,
         secure: false,
         // La ligne 'rewrite' doit rester COMMENTÉE ou ABSENTE. Votre backend a bien /api.
@@ -19,7 +19,7 @@ export default defineConfig({
       // si vos contrôleurs Spring Boot pour les consultations/réservations/messages
       // utilisent un @RequestMapping("/professionnel/...") et NON @RequestMapping("/api/professionnel/...")
       '/professionnel': {
-        target: 'http://192.168.1.128:9191', // <--- Même IP de votre backend
+        target: 'http://192.168.1.151:9191', // <--- Même IP de votre backend
         changeOrigin: true,
         secure: false,
         // Comme pour '/api', si votre backend a '/professionnel' dans son mapping, cette ligne doit être COMMENTÉE.

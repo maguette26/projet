@@ -1,49 +1,69 @@
 // src/components/utilisateur/MesReservations.jsx
 import React, { useState, useEffect, useCallback } from 'react';
-import { getMesReservations, annulerReservationUtilisateur } from '../../services/serviceUtilisateur';
+// Importations corrigées pour correspondre à serviceUtilisateur.js
+import { getReservationsUtilisateur } from '../../services/serviceUtilisateur';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCalendarAlt, faTimesCircle, faClock, faVideo, faCalendarCheck, faInfoCircle, faDollarSign } from '@fortawesome/free-solid-svg-icons';
+// Ajout de faCheckCircle et correction de faTimesCircle si nécessaire pour le statut ANNULEE/REFUSE
+import { faCalendarAlt, faTimesCircle, faClock, faVideo, faCalendarCheck, faInfoCircle, faDollarSign, faCheckCircle } from '@fortawesome/free-solid-svg-icons';
 
-const MesReservations = ({ onError, onReservationChange }) => {
+// Le composant MesReservations prendra des props pour interagir avec les modales du parent
+const MesReservations = ({ onError, onShowConfirm, onShowInfo }) => {
     const [reservations, setReservations] = useState([]);
     const [loading, setLoading] = useState(true);
 
     const fetchMesReservations = useCallback(async () => {
         setLoading(true);
         try {
-            const data = await getMesReservations();
+            // Utilise la fonction renommée du service
+            const data = await getReservationsUtilisateur();
             setReservations(data);
         } catch (err) {
             console.error("Erreur lors de la récupération des réservations de l'utilisateur:", err);
-            onError("Impossible de charger vos réservations. Veuillez réessayer.");
+            // Passe l'erreur au parent via la prop onError
+            onError("Impossible de charger vos réservations. Veuillez vous reconnecter.");
         } finally {
             setLoading(false);
         }
-    }, [onError]);
+    }, [onError]); // Dépend de onError, car c'est une fonction passée en prop
 
     useEffect(() => {
         fetchMesReservations();
     }, [fetchMesReservations]);
 
-    const handleAnnulerReservation = async (reservationId) => {
-        if (!window.confirm("Êtes-vous sûr de vouloir annuler cette réservation ?")) {
-            return;
-        }
-        try {
-            await annulerReservationUtilisateur(reservationId);
-            fetchMesReservations(); // Recharger la liste après annulation
-            if (onReservationChange) onReservationChange(); // Informer le parent si besoin
-        } catch (err) {
-            console.error("Erreur lors de l'annulation de la réservation :", err.response ? err.response.data : err.message);
-            onError(`Erreur lors de l'annulation : ${err.response?.data?.message || err.message}`);
-        }
+    const handleAnnulerReservation = (reservationId) => {
+        // Utilise la prop onShowConfirm fournie par le parent pour afficher la modale de confirmation
+        onShowConfirm(
+            "Êtes-vous sûr de vouloir annuler cette réservation ?",
+            async () => {
+                try {
+                    // Utilise la fonction renommée du service
+                    await cancelReservation(reservationId);
+                    // Recharge la liste après annulation réussie
+                    fetchMesReservations(); 
+                    // Informe le parent d'un changement, si nécessaire (ex: pour mettre à jour un message de succès global)
+                    // onReservationChange(); // Cette prop n'est plus nécessaire ici car on utilise onError/onShowConfirm du parent
+                } catch (err) {
+                    console.error("Erreur lors de l'annulation de la réservation :", err.response ? err.response.data : err.message);
+                    // Passe l'erreur au parent
+                    onError(`Erreur lors de l'annulation : ${err.response?.data?.message || err.message}`);
+                }
+            }
+        );
     };
 
+    // Fonction de formatage de date/heure, corrigée pour utiliser heureReservation
     const formatDateTime = (dateString, timeString) => {
         if (!dateString) return 'N/A';
         try {
-            const dt = new Date(`${dateString}T${timeString || '00:00'}:00`);
-            return dt.toLocaleDateString('fr-FR', {
+            // Assure un format ISO pour la création de Date, même si l'heure est optionnelle
+            const dateTime = new Date(`${dateString}T${timeString || '00:00'}:00`);
+            
+            if (isNaN(dateTime.getTime())) { // Vérifie si la date est invalide
+                console.warn("Invalid date format detected for:", dateString, timeString);
+                return `${dateString}${timeString ? ' ' + timeString : ''}`; 
+            }
+
+            return dateTime.toLocaleString('fr-FR', {
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric',
@@ -52,8 +72,22 @@ const MesReservations = ({ onError, onReservationChange }) => {
             });
         } catch (e) {
             console.error("Erreur de formatage de date/heure:", e);
-            return `${dateString} ${timeString || ''}`;
+            return `${dateString} ${timeString || ''}`; // Retourne les strings bruts en cas d'erreur
         }
+    };
+
+    // Fonction pour afficher les détails dans une modale d'information
+    const showReservationDetails = (res) => {
+        const details = `
+            Détails de la réservation ${res.id}:
+            Professionnel: ${res.professionnel?.nom} ${res.professionnel?.prenom}
+            Date Demande: ${formatDateTime(res.dateReservation, res.heureReservation)}
+            Statut: ${res.statut}
+            Prix: ${res.prix ? `${res.prix.toFixed(2)} MAD` : 'N/A'}
+            Consultation: ${res.consultation ? `Date: ${formatDateTime(res.consultation.dateConsultation, res.consultation.heure)}, Prix: ${res.consultation.prix || 'N/A'} MAD` : 'Non créée'}
+        `;
+        // Utilise la prop onShowInfo fournie par le parent
+        onShowInfo("Détails de la réservation", details);
     };
 
     if (loading) {
@@ -86,30 +120,35 @@ const MesReservations = ({ onError, onReservationChange }) => {
                                 {res.professionnel?.nom} {res.professionnel?.prenom}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                                {formatDateTime(res.dateReservation, res.heureDebut)}
+                                {/* Utilise heureReservation comme défini dans l'entité Java */}
+                                {formatDateTime(res.dateReservation, res.heureReservation)} 
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                                 <FontAwesomeIcon icon={faDollarSign} className="mr-1" />
-                                {res.prix ? res.prix.toFixed(2) : 'N/A'}
+                                {/* Correction de la devise */}
+                                {res.prix ? `${res.prix.toFixed(2)} MAD` : 'N/A'}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm">
                                 <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full
                                     ${res.statut === 'EN_ATTENTE' ? 'bg-yellow-100 text-yellow-800' :
-                                    res.statut === 'VALIDE' ? 'bg-green-100 text-green-800' :
-                                    res.statut === 'REFUSE' ? 'bg-red-100 text-red-800' :
+                                    // Correction de 'VALIDE' en 'VALIDÉ' pour correspondre à l'enum Java
+                                    res.statut === 'VALIDÉ' ? 'bg-green-100 text-green-800' :
+                                    res.statut === 'REFUSE' || res.statut === 'ANNULEE' ? 'bg-red-100 text-red-800' :
                                     res.statut === 'PAYEE' ? 'bg-blue-100 text-blue-800' :
                                     'bg-gray-100 text-gray-800'}`}>
                                     <FontAwesomeIcon icon={
                                         res.statut === 'EN_ATTENTE' ? faClock :
-                                        res.statut === 'VALIDE' ? faCheckCircle :
-                                        res.statut === 'REFUSE' ? faTimesCircle :
+                                        // Correction de 'VALIDE' en 'VALIDÉ'
+                                        res.statut === 'VALIDÉ' ? faCheckCircle :
+                                        res.statut === 'REFUSE' || res.statut === 'ANNULEE' ? faTimesCircle :
                                         faInfoCircle
                                     } className="mr-1" />
                                     {res.statut}
                                 </span>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                                {res.statut === 'VALIDE' && res.consultation ? (
+                                {/* Correction de 'VALIDE' en 'VALIDÉ' */}
+                                {res.statut === 'VALIDÉ' && res.consultation ? (
                                     <>
                                         <p><FontAwesomeIcon icon={faCalendarCheck} className="mr-1" />
                                             {formatDateTime(res.consultation.dateConsultation, res.consultation.heure)}
@@ -120,7 +159,7 @@ const MesReservations = ({ onError, onReservationChange }) => {
                                             </a>
                                         )}
                                     </>
-                                ) : res.statut === 'VALIDE' && !res.consultation ? (
+                                ) : res.statut === 'VALIDÉ' && !res.consultation ? ( // Correction ici aussi
                                     <p className="text-red-500">Consultation non trouvée</p>
                                 ) : (
                                     <p className="text-gray-500">N/A</p>
@@ -137,7 +176,7 @@ const MesReservations = ({ onError, onReservationChange }) => {
                                     </button>
                                 )}
                                 <button
-                                    onClick={() => alert(`Détails de la réservation ${res.id}:\nProfessionnel: ${res.professionnel?.nom} ${res.professionnel?.prenom}\nDate Demande: ${formatDateTime(res.dateReservation, res.heureDebut)}\nStatut: ${res.statut}\nPrix: ${res.prix ? `${res.prix} $` : 'N/A'}\nConsultation: ${res.consultation ? `Date: ${formatDateTime(res.consultation.dateConsultation, res.consultation.heure)}, Prix: ${res.consultation.prix || 'N/A'} $` : 'Non créée'}`)}
+                                    onClick={() => showReservationDetails(res)} // Utilise la nouvelle fonction
                                     className="text-blue-600 hover:text-blue-900 ml-3"
                                     title="Voir les détails"
                                 >
