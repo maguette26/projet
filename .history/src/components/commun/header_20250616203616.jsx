@@ -1,0 +1,202 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { logout } from '../../services/serviceAuth';
+import {
+  BookOpen,
+  LogOut,
+  User,
+  Brain,
+  Info,
+  MessageCircle,
+  UserCog,
+  Crown,
+  ChevronDown,
+} from 'lucide-react';
+
+const Header = () => {
+  const navigate = useNavigate();
+  const [currentRole, setCurrentRole] = useState(localStorage.getItem('role'));
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
+  const buttonRef = useRef(null);
+
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const updatedRole = localStorage.getItem('role');
+      setCurrentRole(updatedRole);
+      if (!updatedRole) navigate('/connexion');
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, [navigate]);
+
+  // Fermer dropdown si clic dehors
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(e.target) &&
+        !buttonRef.current.contains(e.target)
+      ) {
+        setDropdownOpen(false);
+      }
+    };
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') setDropdownOpen(false);
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+
+  const handleDeconnexion = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error('Erreur de déconnexion :', error);
+    }
+  };
+
+  const isProfessional = (role) => ['PSYCHOLOGUE', 'PSYCHIATRE'].includes(role);
+  const isPremiumUser = (role) => ['PREMIUM', 'ADMIN'].includes(role);
+
+  const baseLinkClass = 'text-indigo-600 no-underline hover:text-indigo-700 transition';
+
+  return (
+    <header className="bg-white/80 backdrop-blur-md sticky top-0 z-50 shadow-md h-[70px]">
+      <div className="max-w-7xl mx-auto px-6 py-3 flex justify-between items-center h-full">
+        {/* Logo */}
+        <Link to="/" className="flex items-center gap-2 text-2xl font-extrabold text-indigo-600">
+          <Brain className="w-7 h-7" />
+          PsyConnect
+        </Link>
+
+        {/* Navigation */}
+        <nav className="flex items-center gap-6 text-sm font-semibold">
+          <Link to="/" className={baseLinkClass}>
+            <UserCog className="w-4 h-4 inline-block mr-1" />
+            Accueil
+          </Link>
+          <Link to="/apropos" className={baseLinkClass}>
+            <Info className="w-4 h-4 inline-block mr-1" />
+            À propos
+          </Link>
+          <Link to="/ressources" className={`${baseLinkClass} flex items-center gap-1`}>
+            <BookOpen className="w-4 h-4" /> Ressources
+          </Link>
+          <Link to="/forum" className={baseLinkClass}>
+            <MessageCircle className="w-4 h-4 inline-block mr-1" />
+            Forum
+          </Link>
+
+          {currentRole === 'UTILISATEUR' && (
+            <>
+              <Link to="/tableauUtilisateur" className={`${baseLinkClass} flex items-center gap-1`}>
+                <User className="w-4 h-4" /> Espace Utilisateur
+              </Link>
+              <button
+                onClick={handleDeconnexion}
+                className="flex items-center gap-1 text-red-500 hover:underline"
+              >
+                <LogOut className="w-4 h-4" /> Déconnexion
+              </button>
+            </>
+          )}
+
+          {isProfessional(currentRole) && (
+            <>
+              <Link to="/tableauProfessionnel" className={baseLinkClass}>
+                <UserCog className="w-4 h-4 inline-block mr-1" />
+                Espace Pro
+              </Link>
+              <button
+                onClick={handleDeconnexion}
+                className="flex items-center gap-1 text-red-500 hover:underline"
+              >
+                <LogOut className="w-4 h-4" /> Déconnexion
+              </button>
+            </>
+          )}
+
+          {currentRole === 'ADMIN' && (
+            <>
+              <Link to="/admin/dashboard" className={baseLinkClass}>
+                <UserCog className="w-4 h-4 inline-block mr-1" />
+                Admin
+              </Link>
+              <button
+                onClick={handleDeconnexion}
+                className="flex items-center gap-1 text-red-500 hover:underline"
+              >
+                <LogOut className="w-4 h-4" /> Déconnexion
+              </button>
+            </>
+          )}
+
+          {currentRole && !isPremiumUser(currentRole) && (
+            <Link
+              to="/devenir-premium"
+              className="text-yellow-500 hover:underline flex items-center gap-1"
+            >
+              <Crown className="w-4 h-4" />
+              Premium
+            </Link>
+          )}
+
+          {/* Custom dropdown pour utilisateurs non connectés */}
+          {!currentRole && (
+            <div className="relative" ref={dropdownRef}>
+              <button
+                ref={buttonRef}
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+                aria-haspopup="true"
+                aria-expanded={dropdownOpen}
+                className="text-indigo-600 hover:text-indigo-700 p-1 focus:outline-none"
+              >
+                <User className="w-5 h-5" />
+              </button>
+              {dropdownOpen && (
+                <ul
+                  className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded shadow-lg z-50"
+                  role="menu"
+                >
+                  <li role="none">
+                    <button
+                      role="menuitem"
+                      onClick={() => {
+                        setDropdownOpen(false);
+                        navigate('/connexion');
+                      }}
+                      className="block w-full text-left px-4 py-2 hover:bg-indigo-100"
+                    >
+                      Connexion
+                    </button>
+                  </li>
+                  <li role="none">
+                    <button
+                      role="menuitem"
+                      onClick={() => {
+                        setDropdownOpen(false);
+                        navigate('/inscription');
+                      }}
+                      className="block w-full text-left px-4 py-2 hover:bg-indigo-100"
+                    >
+                      Inscription
+                    </button>
+                  </li>
+                </ul>
+              )}
+            </div>
+          )}
+        </nav>
+      </div>
+    </header>
+  );
+};
+
+export default Header;

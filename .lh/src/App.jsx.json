@@ -1,0 +1,42 @@
+{
+    "sourceFile": "src/App.jsx",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 6,
+            "patches": [
+                {
+                    "date": 1749946588813,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                },
+                {
+                    "date": 1749946630973,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -31,9 +31,9 @@\n                     <Route path=\"/devenir-premium\" element={<DevenirPremium />} /> {/* <-- Nouvelle route */}\r\n \r\n                     {/* Routes des tableaux de bord */}\r\n                     <Route path=\"/tableauAdmin\" element={<TableauAdmin />} /> \r\n-                    //<Route path=\"/admin/dashboard\" element={<AdminDashboard />} />\r\n+                    *<Route path=\"/admin/dashboard\" element={<AdminDashboard />} />\r\n \r\n                     <Route path=\"/tableauUtilisateur\" element={<TableauUtilisateur />} />\r\n                     <Route path=\"/tableauProfessionnel\" element={<TableauProfessionnel />} />\r\n                     {/* Ajoutez d'autres routes si nécessaire */}\r\n"
+                },
+                {
+                    "date": 1749946643479,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -31,9 +31,9 @@\n                     <Route path=\"/devenir-premium\" element={<DevenirPremium />} /> {/* <-- Nouvelle route */}\r\n \r\n                     {/* Routes des tableaux de bord */}\r\n                     <Route path=\"/tableauAdmin\" element={<TableauAdmin />} /> \r\n-                    *<Route path=\"/admin/dashboard\" element={<AdminDashboard />} />\r\n+                    /*<Route path=\"/admin/dashboard\" element={<AdminDashboard />} />\r\n \r\n                     <Route path=\"/tableauUtilisateur\" element={<TableauUtilisateur />} />\r\n                     <Route path=\"/tableauProfessionnel\" element={<TableauProfessionnel />} />\r\n                     {/* Ajoutez d'autres routes si nécessaire */}\r\n"
+                },
+                {
+                    "date": 1749946653470,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -31,9 +31,9 @@\n                     <Route path=\"/devenir-premium\" element={<DevenirPremium />} /> {/* <-- Nouvelle route */}\r\n \r\n                     {/* Routes des tableaux de bord */}\r\n                     <Route path=\"/tableauAdmin\" element={<TableauAdmin />} /> \r\n-                    /*<Route path=\"/admin/dashboard\" element={<AdminDashboard />} />\r\n+                    <Route path=\"/admin/dashboard\" element={<AdminDashboard />} />\r\n \r\n                     <Route path=\"/tableauUtilisateur\" element={<TableauUtilisateur />} />\r\n                     <Route path=\"/tableauProfessionnel\" element={<TableauProfessionnel />} />\r\n                     {/* Ajoutez d'autres routes si nécessaire */}\r\n"
+                },
+                {
+                    "date": 1749946661142,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -31,9 +31,9 @@\n                     <Route path=\"/devenir-premium\" element={<DevenirPremium />} /> {/* <-- Nouvelle route */}\r\n \r\n                     {/* Routes des tableaux de bord */}\r\n                     <Route path=\"/tableauAdmin\" element={<TableauAdmin />} /> \r\n-                    <Route path=\"/admin/dashboard\" element={<AdminDashboard />} />\r\n+                    {<Route path=\"/admin/dashboard\" element={<AdminDashboard />} />]\r\n \r\n                     <Route path=\"/tableauUtilisateur\" element={<TableauUtilisateur />} />\r\n                     <Route path=\"/tableauProfessionnel\" element={<TableauProfessionnel />} />\r\n                     {/* Ajoutez d'autres routes si nécessaire */}\r\n"
+                },
+                {
+                    "date": 1749946666766,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -31,9 +31,9 @@\n                     <Route path=\"/devenir-premium\" element={<DevenirPremium />} /> {/* <-- Nouvelle route */}\r\n \r\n                     {/* Routes des tableaux de bord */}\r\n                     <Route path=\"/tableauAdmin\" element={<TableauAdmin />} /> \r\n-                    {<Route path=\"/admin/dashboard\" element={<AdminDashboard />} />\r\n+                    {<Route path=\"/admin/dashboard\" element={<AdminDashboard />} />}\r\n \r\n                     <Route path=\"/tableauUtilisateur\" element={<TableauUtilisateur />} />\r\n                     <Route path=\"/tableauProfessionnel\" element={<TableauProfessionnel />} />\r\n                     {/* Ajoutez d'autres routes si nécessaire */}\r\n"
+                },
+                {
+                    "date": 1749946681994,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -31,9 +31,9 @@\n                     <Route path=\"/devenir-premium\" element={<DevenirPremium />} /> {/* <-- Nouvelle route */}\r\n \r\n                     {/* Routes des tableaux de bord */}\r\n                     <Route path=\"/tableauAdmin\" element={<TableauAdmin />} /> \r\n-                    {<Route path=\"/admin/dashboard\" element={<AdminDashboard />} />}\r\n+                    {/*<Route path=\"/admin/dashboard\" element={<AdminDashboard />} />}\r\n \r\n                     <Route path=\"/tableauUtilisateur\" element={<TableauUtilisateur />} />\r\n                     <Route path=\"/tableauProfessionnel\" element={<TableauProfessionnel />} />\r\n                     {/* Ajoutez d'autres routes si nécessaire */}\r\n"
+                }
+            ],
+            "date": 1749946588813,
+            "name": "Commit-0",
+            "content": "// src/App.js\r\nimport React from 'react';\r\nimport { BrowserRouter as Router, Routes, Route } from 'react-router-dom';\r\nimport Inscription from './pages/Inscription';\r\nimport InscriptionUser from './pages/InscriptionUser';\r\nimport InscriptionProfessionnel from './pages/InscriptionProfessionnel';\r\nimport Connexion from './pages/Connexion';\r\nimport Ressources from './pages/Ressources';\r\nimport Forum from './pages/Forum';\r\nimport TableauUtilisateur from './pages/TableauUtilisateur';\r\nimport TableauAdmin from './pages/TableauAdmin';\r\nimport TableauProfessionnel from './pages/TableauProfessionnel';\r\nimport Accueil from './pages/Accueil';\r\nimport AdminDashboard from './components/admin/AdminDashboard';\r\nimport DevenirPremium from './pages/DevenirPremium'; // <-- Importez la nouvelle page\r\n\r\nimport { RessourceProvider } from './pages/RessourceContext.jsx'; // Assurez-vous que le chemin et l'extension sont corrects\r\n\r\nfunction App() {\r\n    return (\r\n        <Router>\r\n            <RessourceProvider>\r\n                <Routes>\r\n                    <Route path=\"/\" element={<Accueil />} />\r\n                    <Route path=\"/inscription\" element={<Inscription />} />\r\n                    <Route path=\"/inscription/utilisateur\" element={<InscriptionUser />} />\r\n                    <Route path=\"/inscription/professionnel\" element={<InscriptionProfessionnel />} />\r\n                    <Route path=\"/connexion\" element={<Connexion />} />\r\n                    <Route path=\"/ressources\" element={<Ressources />} />\r\n                    <Route path=\"/forum\" element={<Forum />} />\r\n                    <Route path=\"/devenir-premium\" element={<DevenirPremium />} /> {/* <-- Nouvelle route */}\r\n\r\n                    {/* Routes des tableaux de bord */}\r\n                    <Route path=\"/tableauAdmin\" element={<TableauAdmin />} /> \r\n                    //<Route path=\"/admin/dashboard\" element={<AdminDashboard />} />\r\n\r\n                    <Route path=\"/tableauUtilisateur\" element={<TableauUtilisateur />} />\r\n                    <Route path=\"/tableauProfessionnel\" element={<TableauProfessionnel />} />\r\n                    {/* Ajoutez d'autres routes si nécessaire */}\r\n                </Routes>\r\n            </RessourceProvider>\r\n        </Router>\r\n    );\r\n}\r\n\r\nexport default App;\r\n"
+        }
+    ]
+}

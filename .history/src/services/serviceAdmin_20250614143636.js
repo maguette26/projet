@@ -1,0 +1,220 @@
+import api from './api';
+
+// --- Fonctions de gestion des utilisateurs ---
+
+/**
+ * Récupère tous les utilisateurs enregistrés dans le système.
+ * Nécessite les permissions ADMIN.
+ * @returns {Promise<Array>} Une promesse qui résout avec une liste d'objets utilisateur.
+ */
+export const getAllUsers = async () => {
+    try {
+        console.log("serviceAdmin: Récupération de tous les utilisateurs via '/utilisateurs'...");
+        // MODIFICATION ICI : Appel à /utilisateurs au lieu de /utilisateurs/all
+        const response = await api.get('/utilisateurs');
+        console.log("serviceAdmin: Utilisateurs récupérés:", response.data);
+        return response.data;
+    } catch (error) {
+        console.error("serviceAdmin: Erreur lors de la récupération des utilisateurs:", error.response?.data || error.message);
+        throw error;
+    }
+};
+
+/**
+ * Met à jour les informations d'un utilisateur spécifique.
+ * Nécessite les permissions ADMIN.
+ * @param {number} userId L'ID de l'utilisateur à mettre à jour.
+ * @param {object} userData Les données de l'utilisateur à mettre à jour (ex: { role: 'ADMIN' }).
+ * @returns {Promise<object>} Une promesse qui résout avec l'objet utilisateur mis à jour.
+ */
+export const updateUser = async (userId, userData) => {
+    try {
+        console.log(`serviceAdmin: Mise à jour de l'utilisateur ID ${userId} avec les données:`, userData);
+        const response = await api.put(`/utilisateurs/${userId}`, userData);
+        console.log(`serviceAdmin: Utilisateur ID ${userId} mis à jour:`, response.data);
+        return response.data;
+    } catch (error) {
+        console.error(`serviceAdmin: Erreur lors de la mise à jour de l'utilisateur ID ${userId}:`, error.response?.data || error.message);
+        throw error;
+    }
+};
+
+/**
+ * Supprime un utilisateur spécifique du système.
+ * Nécessite les permissions ADMIN.
+ * @param {number} userId L'ID de l'utilisateur à supprimer.
+ * @returns {Promise<void>} Une promesse qui résout une fois la suppression réussie.
+ */
+export const deleteUser = async (userId) => {
+    try {
+        console.log(`serviceAdmin: Suppression de l'utilisateur ID ${userId}...`);
+        await api.delete(`/utilisateurs/${userId}`);
+        console.log(`serviceAdmin: Utilisateur ID ${userId} supprimé avec succès.`);
+    } catch (error) {
+        console.error(`serviceAdmin: Erreur lors de la suppression de l'utilisateur ID ${userId}:`, error.response?.data || error.message);
+        throw error;
+    }
+};
+
+// --- Fonctions de gestion des professionnels de santé mentale ---
+
+/**
+ * Récupère tous les professionnels de santé mentale (validés, en attente, refusés).
+ * Nécessite les permissions ADMIN.
+ * @returns {Promise<Array>} Une promesse qui résout avec une liste d'objets professionnel.
+ */
+export const getProfessionnels = async () => {
+    try {
+        console.log("serviceAdmin: Récupération de tous les professionnels de santé mentale via '/professionnels/tous'...");
+        const response = await api.get('/professionnels/tous');
+        console.log("serviceAdmin: Professionnels récupérés:", response.data);
+        return response.data;
+    } catch (error) {
+        console.error("serviceAdmin: Erreur lors de la récupération des professionnels:", error.response?.data || error.message);
+        throw error;
+    }
+};
+
+/**
+ * Met à jour le statut de validation d'un professionnel de santé mentale.
+ * Nécessite les permissions ADMIN.
+ * @param {number} id L'ID du professionnel à valider ou refuser.
+ * @param {boolean} valide Indique si le professionnel doit être validé (true) ou refusé (false).
+ * @returns {Promise<object>} Une promesse qui résout avec l'objet professionnel mis à jour.
+ */
+export const validateProfessionnel = async (id, valide) => {
+    try {
+        console.log(`serviceAdmin: Envoi de la requête de validation/refus pour professionnel ID: ${id}, valide: ${valide}`);
+        const response = await api.patch(
+            `/professionnels/validation/${id}`,
+            { valide: valide }
+        );
+        console.log(`serviceAdmin: Réponse de validation/refus pour ID ${id}:`, response.data);
+        return response.data;
+    } catch (error) {
+        console.error(`serviceAdmin: Erreur lors de la validation/refus du professionnel ID ${id}:`, error.response?.data || error.message);
+        throw error;
+    }
+};
+
+/**
+ * Télécharge le document justificatif d'un professionnel.
+ * Nécessite les permissions ADMIN.
+ * @param {string} filename Le nom du fichier à télécharger.
+ * @returns {Promise<Blob>} Une promesse qui résout avec un objet Blob représentant le fichier.
+ */
+export const downloadDocumentJustificatif = async (filename) => {
+    try {
+        console.log(`serviceAdmin: Tentative de téléchargement du document: ${filename}`);
+        const response = await api.get(`/professionnels/fichiers/${filename}`, {
+            responseType: 'blob',
+        });
+        console.log(`serviceAdmin: Document '${filename}' téléchargé avec succès.`);
+        return response.data;
+    } catch (error) {
+        console.error(`serviceAdmin: Erreur lors du téléchargement du document '${filename}':`, error.response?.data || error.message);
+        throw error;
+    }
+};
+const API_BASE_URL = 'http://localhost:9191/api';
+ export async function getDiscussions() {
+  const res = await fetch(`${API_BASE_URL}/forum/admin/tous`, {
+    credentials: 'include'
+  });
+  if (!res.ok) throw new Error('Erreur récupération sujets');
+  return await res.json();
+}
+
+export async function getReponsesSujet(sujetId) {
+  const res = await fetch(`${API_BASE_URL}/forum/sujets/reponses/${sujetId}`, {
+    credentials: 'include'
+  });
+  if (!res.ok) throw new Error('Erreur récupération réponses');
+  return await res.json();
+}
+
+export async function supprimerDiscussion(id) {
+  const res = await fetch(`${API_BASE_URL}/forum/sujets/${id}`, {
+    method: 'DELETE',
+    credentials: 'include'
+  });
+  if (!res.ok) throw new Error('Erreur suppression sujet');
+}
+
+export async function supprimerReponse(id) {
+  const res = await fetch(`${API_BASE_URL}/forum/sujets/reponses/supprimer/${id}`, {
+    method: 'DELETE',
+    credentials: 'include'
+  });
+  if (!res.ok) throw new Error('Erreur suppression réponse');
+}
+/**
+ * Récupère toutes les discussions du forum pour l'admin.
+ * @returns {Promise<Array>} Liste des sujets du forum.
+ */
+export const getDiscussions = async () => {
+    try {
+        console.log("serviceAdmin: Récupération de toutes les discussions...");
+        const response = await api.get('/forum/admin/tous', {
+            withCredentials: true,
+        });
+        console.log("serviceAdmin: Discussions récupérées:", response.data);
+        return response.data;
+    } catch (error) {
+        console.error("serviceAdmin: Erreur lors de la récupération des discussions:", error.response?.data || error.message);
+        throw error;
+    }
+};
+
+/**
+ * Récupère toutes les réponses associées à un sujet donné.
+ * @param {number} sujetId L'ID du sujet.
+ * @returns {Promise<Array>} Liste des réponses.
+ */
+export const getReponsesSujet = async (sujetId) => {
+    try {
+        console.log(`serviceAdmin: Récupération des réponses du sujet ID ${sujetId}...`);
+        const response = await api.get(`/forum/sujets/reponses/${sujetId}`, {
+            withCredentials: true,
+        });
+        console.log(`serviceAdmin: Réponses pour le sujet ${sujetId}:`, response.data);
+        return response.data;
+    } catch (error) {
+        console.error(`serviceAdmin: Erreur lors de la récupération des réponses du sujet ${sujetId}:`, error.response?.data || error.message);
+        throw error;
+    }
+};
+
+/**
+ * Supprime une discussion spécifique.
+ * @param {number} id L'ID du sujet à supprimer.
+ */
+export const supprimerDiscussion = async (id) => {
+    try {
+        console.log(`serviceAdmin: Suppression de la discussion ID ${id}...`);
+        await api.delete(`/forum/sujets/${id}`, {
+            withCredentials: true,
+        });
+        console.log(`serviceAdmin: Discussion ID ${id} supprimée avec succès.`);
+    } catch (error) {
+        console.error(`serviceAdmin: Erreur lors de la suppression de la discussion ID ${id}:`, error.response?.data || error.message);
+        throw error;
+    }
+};
+
+/**
+ * Supprime une réponse spécifique à un sujet.
+ * @param {number} id L'ID de la réponse à supprimer.
+ */
+export const supprimerReponse = async (id) => {
+    try {
+        console.log(`serviceAdmin: Suppression de la réponse ID ${id}...`);
+        await api.delete(`/forum/sujets/reponses/supprimer/${id}`, {
+            withCredentials: true,
+        });
+        console.log(`serviceAdmin: Réponse ID ${id} supprimée avec succès.`);
+    } catch (error) {
+        console.error(`serviceAdmin: Erreur lors de la suppression de la réponse ID ${id}:`, error.response?.data || error.message);
+        throw error;
+    }
+};

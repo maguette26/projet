@@ -1,0 +1,26 @@
+{
+    "sourceFile": "src/components/commun/Layout.jsx",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 2,
+            "patches": [
+                {
+                    "date": 1750188578172,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                },
+                {
+                    "date": 1750273509007,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -1,6 +1,6 @@\n import React, { useState, useEffect } from 'react';\r\n-import Header from './Header';\r\n+ \r\n import PiedPage from './PiedPage';\r\n \r\n const Layout = ({ children }) => {\r\n   const [darkMode, setDarkMode] = useState(() => {\r\n"
+                },
+                {
+                    "date": 1750273515950,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -1,7 +1,8 @@\n import React, { useState, useEffect } from 'react';\r\n  \r\n import PiedPage from './PiedPage';\r\n+import Header from './header';\r\n \r\n const Layout = ({ children }) => {\r\n   const [darkMode, setDarkMode] = useState(() => {\r\n     // Lire depuis localStorage si dispo\r\n"
+                }
+            ],
+            "date": 1750188578172,
+            "name": "Commit-0",
+            "content": "import React, { useState, useEffect } from 'react';\r\nimport Header from './Header';\r\nimport PiedPage from './PiedPage';\r\n\r\nconst Layout = ({ children }) => {\r\n  const [darkMode, setDarkMode] = useState(() => {\r\n    // Lire depuis localStorage si dispo\r\n    const saved = localStorage.getItem('darkMode');\r\n    return saved ? JSON.parse(saved) : false;\r\n  });\r\n\r\n  useEffect(() => {\r\n    const html = document.documentElement;\r\n    if (darkMode) {\r\n      html.classList.add('dark');\r\n    } else {\r\n      html.classList.remove('dark');\r\n    }\r\n    localStorage.setItem('darkMode', JSON.stringify(darkMode));\r\n  }, [darkMode]);\r\n\r\n  return (\r\n    <div className=\"flex flex-col min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300\">\r\n      <Header darkMode={darkMode} setDarkMode={setDarkMode} />\r\n      <main className=\"flex-grow px-4 sm:px-6 lg:px-8\">\r\n        {children}\r\n      </main>\r\n      <PiedPage />\r\n    </div>\r\n  );\r\n};\r\n\r\nexport default Layout;\r\n"
+        }
+    ]
+}
