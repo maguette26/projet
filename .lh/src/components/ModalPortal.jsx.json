@@ -1,0 +1,18 @@
+{
+    "sourceFile": "src/components/ModalPortal.jsx",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1750379527559,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1750379527559,
+            "name": "Commit-0",
+            "content": "import React, { useEffect, useRef } from 'react';\r\nimport ReactDOM from 'react-dom';\r\n\r\nconst ModalPortal = ({ children }) => {\r\n  const elRef = useRef(null);\r\n\r\n  if (!elRef.current) {\r\n    elRef.current = document.createElement('div');\r\n  }\r\n\r\n  useEffect(() => {\r\n    const modalRoot = document.getElementById('modal-root');\r\n    modalRoot.appendChild(elRef.current);\r\n\r\n    return () => {\r\n      modalRoot.removeChild(elRef.current);\r\n    };\r\n  }, []);\r\n\r\n  return ReactDOM.createPortal(children, elRef.current);\r\n};\r\n\r\nexport default ModalPortal;\r\n"
+        }
+    ]
+}
