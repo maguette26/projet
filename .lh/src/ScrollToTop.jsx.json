@@ -1,0 +1,18 @@
+{
+    "sourceFile": "src/ScrollToTop.jsx",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1750869449752,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1750869449752,
+            "name": "Commit-0",
+            "content": "// src/ScrollToTop.jsx\r\nimport { useEffect } from \"react\";\r\nimport { useLocation } from \"react-router-dom\";\r\n\r\nconst ScrollToTop = () => {\r\n  const { pathname } = useLocation();\r\n\r\n  useEffect(() => {\r\n    window.scrollTo(0, 0);\r\n  }, [pathname]);\r\n\r\n  return null;\r\n};\r\n\r\nexport default ScrollToTop;\r\n"
+        }
+    ]
+}

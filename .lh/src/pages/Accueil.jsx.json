@@ -1,0 +1,26 @@
+{
+    "sourceFile": "src/pages/Accueil.jsx",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 2,
+            "patches": [
+                {
+                    "date": 1750863184778,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                },
+                {
+                    "date": 1750863192246,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -23,9 +23,9 @@\n           });\r\n         }\r\n         return nextIndex;\r\n       });\r\n-    }, 00);\r\n+    }, 6000);\r\n \r\n     return () => clearInterval(interval);\r\n   }, [autoScroll]);\r\n \r\n"
+                },
+                {
+                    "date": 1750863272306,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -23,9 +23,9 @@\n           });\r\n         }\r\n         return nextIndex;\r\n       });\r\n-    }, 6000);\r\n+    }, 7000);\r\n \r\n     return () => clearInterval(interval);\r\n   }, [autoScroll]);\r\n \r\n"
+                }
+            ],
+            "date": 1750863184778,
+            "name": "Commit-0",
+            "content": "import React, { useEffect, useState, useRef } from 'react';\r\nimport { Play, Pause } from 'lucide-react';\r\nimport Layout from '../components/commun/Layout';\r\nimport Hero from '../components/commun/Hero';\r\nimport Fonctionnalites from '../components/commun/Fonctionnalites';\r\nimport PourquoiNous from '../components/commun/PourquoiNous';\r\n\r\nconst Accueil = () => {\r\n  const containerRef = useRef(null);\r\n  const sectionsCount = 3;\r\n  const [currentIndex, setCurrentIndex] = useState(0);\r\n  const [autoScroll, setAutoScroll] = useState(true);\r\n\r\n  useEffect(() => {\r\n    if (!autoScroll) return;\r\n\r\n    const interval = setInterval(() => {\r\n      setCurrentIndex((prevIndex) => {\r\n        const nextIndex = (prevIndex + 1) % sectionsCount;\r\n        if (containerRef.current) {\r\n          containerRef.current.children[nextIndex]?.scrollIntoView({\r\n            behavior: 'smooth',\r\n          });\r\n        }\r\n        return nextIndex;\r\n      });\r\n    }, 00);\r\n\r\n    return () => clearInterval(interval);\r\n  }, [autoScroll]);\r\n\r\n  return (\r\n    <Layout>\r\n      {/* Bouton Play/Pause flottant en bas à droite */}\r\n      <button\r\n        onClick={() => setAutoScroll(!autoScroll)}\r\n        aria-label={autoScroll ? 'Pause auto scroll' : 'Play auto scroll'}\r\n        className=\"\r\n          fixed bottom-6 right-6 z-50 flex items-center justify-center\r\n          w-12 h-12 rounded-full\r\n          bg-indigo-400 text-white\r\n          shadow-lg\r\n          hover:bg-indigo-600\r\n          transition\r\n          focus:outline-none focus:ring-2 focus:ring-indigo-500\r\n          active:scale-90\r\n        \"\r\n      >\r\n        {autoScroll ? (\r\n          <Pause className=\"w-6 h-6\" />\r\n        ) : (\r\n          <Play className=\"w-6 h-6\" />\r\n        )}\r\n      </button>\r\n\r\n      {/* Conteneur à défilement automatique */}\r\n      <div\r\n        ref={containerRef}\r\n        className=\"h-screen overflow-y-scroll scroll-smooth snap-y snap-mandatory\"\r\n      >\r\n        <section className=\"h-screen snap-start flex items-center justify-center bg-indigo-50\">\r\n          <Hero />\r\n        </section>\r\n\r\n        <section className=\"h-screen snap-start flex items-center justify-center bg-white\">\r\n          <Fonctionnalites />\r\n        </section>\r\n\r\n        <section className=\"h-screen snap-start flex items-center justify-center bg-white\">\r\n          <PourquoiNous />\r\n        </section>\r\n      </div>\r\n    </Layout>\r\n  );\r\n};\r\n\r\nexport default Accueil;\r\n"
+        }
+    ]
+}

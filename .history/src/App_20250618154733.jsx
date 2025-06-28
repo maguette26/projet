@@ -35,7 +35,6 @@ function App() {
                     {/* Routes des tableaux de bord */}
                     <Route path="/tableauAdmin" element={<TableauAdmin />} /> 
                      
-
                     <Route path="/tableauUtilisateur" element={<TableauUtilisateur />} />
                     <Route path="/tableauProfessionnel" element={<TableauProfessionnel />} />
                     {/* Ajoutez d'autres routes si nécessaire */}

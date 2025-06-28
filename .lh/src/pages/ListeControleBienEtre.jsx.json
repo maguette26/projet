@@ -1,0 +1,18 @@
+{
+    "sourceFile": "src/pages/ListeControleBienEtre.jsx",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1750871652794,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1750871652794,
+            "name": "Commit-0",
+            "content": "// src/pages/ListeControleBienEtre.jsx\r\nimport React, { useState } from 'react';\r\nimport Layout from '../components/commun/Layout';\r\n\r\nconst ListeControleBienEtre = () => {\r\n  const [checks, setChecks] = useState({\r\n    sommeil: false,\r\n    alimentation: false,\r\n    exercice: false,\r\n    hydratation: false,\r\n    relaxation: false,\r\n  });\r\n\r\n  const toggleCheck = (key) => {\r\n    setChecks(prev => ({ ...prev, [key]: !prev[key] }));\r\n  };\r\n\r\n  return (\r\n    <Layout>\r\n      <div className=\"max-w-3xl mx-auto p-6\">\r\n        <h1 className=\"text-3xl font-bold mb-6\">Liste de Contrôle Bien-Être</h1>\r\n        <p>Cochez les actions que vous avez réalisées aujourd'hui :</p>\r\n        <ul className=\"mt-4 space-y-3\">\r\n          {Object.entries(checks).map(([key, checked]) => (\r\n            <li key={key}>\r\n              <label className=\"inline-flex items-center cursor-pointer select-none\">\r\n                <input\r\n                  type=\"checkbox\"\r\n                  checked={checked}\r\n                  onChange={() => toggleCheck(key)}\r\n                  className=\"form-checkbox h-5 w-5 text-indigo-600\"\r\n                />\r\n                <span className=\"ml-3 capitalize\">{key === 'sommeil' ? 'Sommeil suffisant' :\r\n                  key === 'alimentation' ? 'Alimentation équilibrée' :\r\n                  key === 'exercice' ? 'Exercice physique' :\r\n                  key === 'hydratation' ? 'Hydratation suffisante' :\r\n                  'Relaxation/Temps pour soi'}</span>\r\n              </label>\r\n            </li>\r\n          ))}\r\n        </ul>\r\n        <p className=\"mt-6 font-semibold\">\r\n          Total actions réalisées : {Object.values(checks).filter(Boolean).length} / {Object.keys(checks).length}\r\n        </p>\r\n      </div>\r\n    </Layout>\r\n  );\r\n};\r\n\r\nexport default ListeControleBienEtre;\r\n"
+        }
+    ]
+}

@@ -1,0 +1,18 @@
+{
+    "sourceFile": "src/pages/RessourceContext.jsx",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1750969246717,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1750969246717,
+            "name": "Commit-0",
+            "content": "    // src/pages/RessourceContext.jsx\r\n    import React, { createContext, useState, useContext, useMemo } from 'react';\r\n\r\n    // 1. Crée le Contexte\r\n    const RessourceContext = createContext();\r\n\r\n    // 2. Crée un Hook personnalisé pour utiliser le Contexte plus facilement\r\n    export const useRessource = () => {\r\n      const context = useContext(RessourceContext);\r\n      if (!context) {\r\n        throw new Error('useRessource doit être utilisé à l\\'intérieur d\\'un RessourceProvider');\r\n      }\r\n      return context;\r\n    };\r\n\r\n    // 3. Crée le Fournisseur (Provider) du Contexte\r\n    export const RessourceProvider = ({ children }) => {\r\n      // État de la catégorie sélectionnée, 'all' par défaut\r\n      const [selectedCategory, setSelectedCategory] = useState('all');\r\n\r\n      // Ordre et titres affichables pour les catégories\r\n      const categoriesOrder = useMemo(() => ([\r\n        { key: 'all', title: 'Toutes les catégories' },\r\n        { key: 'citation', title: 'Citations Inspirantes' },\r\n        { key: 'article', title: 'Articles Éducatifs' },\r\n        { key: 'guide_pratique', title: 'Guides Pratiques' },\r\n        { key: 'video', title: 'Vidéos de Relaxation et Exercices' },\r\n        { key: 'podcast', title: 'Podcasts Bien-être' },\r\n       // { key: 'outil', title: 'Outils Interactifs' },\r\n   \r\n        { key: 'Autres', title: 'Autres' } \r\n      ]), []);\r\n\r\n      // Valeur fournie par le contexte\r\n      const contextValue = useMemo(() => ({\r\n        selectedCategory,\r\n        setSelectedCategory,\r\n        categoriesOrder\r\n      }), [selectedCategory, categoriesOrder]);\r\n\r\n      return (\r\n        <RessourceContext.Provider value={contextValue}>\r\n          {children}\r\n        </RessourceContext.Provider>\r\n      );\r\n    };\r\n    "
+        }
+    ]
+}

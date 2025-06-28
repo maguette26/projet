@@ -108,7 +108,7 @@ const MesConsultations = () => {
                     <Clock size={16} /> Heure : {c.heure?.substring(0, 5) || '—'}
                   </p>
                   <div className="flex items-center gap-2">
-                    <Info size={16} className="text-gray-500" />Statut
+                    <Info size={16} className="text-gray-500" />Statut:
                     {getBadge(c.statut)}
                   </div>
                   <p className="text-gray-800 font-medium flex items-center gap-1">Prix :
