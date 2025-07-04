@@ -51,7 +51,7 @@ const ListeProfessionnels = () => {
         const specs = Array.from(new Set(res.data.map(p => p.specialite))).sort();
         setSpecialites(specs);
       } catch (err) {
-        console.error(err); 
+        console.error(err);
         setError("❌ Impossible de charger les professionnels.");
       }
     };
