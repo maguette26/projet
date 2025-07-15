@@ -24,7 +24,7 @@ const Accueil = () => {
         }
         return nextIndex;
       });
-    }, 8000);
+    }, 000);
 
     return () => clearInterval(interval);
   }, [autoScroll]);

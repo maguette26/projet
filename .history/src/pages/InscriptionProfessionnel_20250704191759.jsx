@@ -230,7 +230,7 @@ const InscriptionProfessionnel = () => {
               value={formData.specialite}
               onChange={handleChange}
               error={errors.specialite}
-              placeholder="Ex: psychiatrie, psychologie"
+              placeholder="Ex: psychiatrie, Psychiatre..."
             />
 
             <div className="flex flex-col mb-3">
