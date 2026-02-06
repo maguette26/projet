@@ -188,7 +188,7 @@ const Forum = () => {
             setSuccessMessage("Sujet créé avec succès !");
             setTimeout(() => setSuccessMessage(null), 3000);
         } catch (err) {
-            setError(err.response?.data?.message || "certains mots utilisés ne sont pas autorisés dans la création du sujet. Veuillez reformuler.");
+            setError(err.response?.data?.message || "Le su.");
         }
     };
 
@@ -224,7 +224,7 @@ const Forum = () => {
             }));
             fetchSujets();
         } catch (err) {
-            setErrorReponses(err.response?.data?.message || "Erreur lors de l'envoi de la réponse,certains mots utilisés ne sont pas autorisés dans la réponse. Veuillez reformuler.");
+            setErrorReponses(err.response?.data?.message || "Erreur lors de l'envoi de la réponse.");
         }
     };
 

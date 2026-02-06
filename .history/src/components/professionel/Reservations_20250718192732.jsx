@@ -165,15 +165,15 @@ const Reservations = ({ proId }) => {
         ))}
       </div>
 
-      {reservationsFiltrees.length === 0 ? (
-        <p className="text-gray-500">Vous n'avez aucune réservation pour le moment</p>
+      {  reservationsFiltrees.length === 0 ? (
+        <p className="text-gray-500">Vous n'avez aucune  réservation pour le moment</p>
       ) : (
         <div className="overflow-x-auto rounded-lg shadow">
           <table className="w-full border-collapse">
             <thead className="bg-blue-600">
               <tr>
                 <th className="px-4 py-2 text-left text-sm font-semibold text-white">Date</th>
-                <th className="px-4 py-2 text-left text-sm font-semibold text-white">Heure</th>
+               
                 <th className="px-4 py-2 text-left text-sm font-semibold text-white">Statut</th>
                 <th className="px-4 py-2 text-left text-sm font-semibold text-white">Actions</th>
               </tr>
@@ -181,6 +181,11 @@ const Reservations = ({ proId }) => {
             <tbody className="bg-white text-sm">
               {reservationsFiltrees.map((reservation, index) => {
                 const statutMapped = mapStatutValidation(reservation);
+                const utilisateurNomPrenom = reservation.utilisateur
+                  ? `${reservation.utilisateur.prenom || ''} ${reservation.utilisateur.nom || ''}`.trim()
+                  : 'Utilisateur inconnu';
+                const utilisateurEmail = reservation.utilisateur?.email || 'Email inconnu';
+
                 return (
                   <tr
                     key={reservation.id}
@@ -194,6 +199,8 @@ const Reservations = ({ proId }) => {
                     <td className="px-4 py-3 font-medium text-gray-800">
                       {formatHeure(reservation.heureConsultation)}
                     </td>
+                    <td className="px-4 py-3 font-medium text-gray-800">{utilisateurNomPrenom}</td>
+                    <td className="px-4 py-3 font-medium text-gray-800">{utilisateurEmail}</td>
                     <td className="px-4 py-3">{getStatutMessage(statutMapped)}</td>
                     <td className="px-4 py-3 flex gap-2 items-center">{renderActions(reservation.id, statutMapped)}</td>
                   </tr>

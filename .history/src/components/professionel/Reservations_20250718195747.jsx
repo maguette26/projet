@@ -135,6 +135,143 @@ const Reservations = ({ proId }) => {
     }
   };
 
+  import React, { useEffect, useState } from 'react';
+import { getReservations, updateReservationStatus } from '../../services/servicePsy';
+import { CheckCircle, XCircle } from 'lucide-react';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
+const Reservations = ({ proId }) => {
+  const [reservations, setReservations] = useState([]);
+  const [filtre, setFiltre] = useState('TOUTES');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [updatingId, setUpdatingId] = useState(null);
+
+  const fetchReservations = async () => {
+    setLoading(true);
+    try {
+      const data = await getReservations(proId);
+      setReservations(data);
+      setError(null);
+    } catch (err) {
+      setError("Erreur lors du chargement des réservations.");
+      setReservations([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (proId) {
+      fetchReservations();
+    } else {
+      setLoading(false);
+      setError("ID professionnel manquant.");
+    }
+  }, [proId]);
+
+  const handleUpdateStatus = async (id, status) => {
+    setUpdatingId(id);
+    try {
+      await updateReservationStatus(id, status);
+      await fetchReservations();
+      if (status === 'VALIDE') {
+        toast.success("La réservation a été validée.");
+      } else if (status === 'REFUSE') {
+        toast.error("La réservation a été refusée.");
+      }
+    } catch (err) {
+      setError("Erreur lors de la mise à jour du statut.");
+      toast.error("Erreur lors de la mise à jour.");
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
+  const mapStatutValidation = (reservation) => {
+    if (reservation.statut === 'PAYEE' || reservation.statut === 'EN_ATTENTE_PAIEMENT') {
+      return 'VALIDE';
+    }
+    if (reservation.statut === 'REFUSE' || reservation.statut === 'ANNULEE') {
+      return 'REFUSE';
+    }
+    return 'EN_ATTENTE';
+  };
+
+  const formatHeure = (heure) => {
+    if (!heure) return '';
+    const [h, m] = heure.split(':');
+    return `${h}h${m}`;
+  };
+
+  const getStatutMessage = (statut) => {
+    switch (statut) {
+      case 'VALIDE':
+        return <span className="text-green-600 font-semibold">Validée</span>;
+      case 'REFUSE':
+        return <span className="text-red-600 font-semibold">Refusée</span>;
+      default:
+        return <span className="text-gray-600 font-semibold">En attente</span>;
+    }
+  };
+
+  const reservationsFiltrees = reservations.filter((r) =>
+    filtre === 'TOUTES' ? true : mapStatutValidation(r) === filtre
+  );
+
+  const renderActions = (id, statut) => {
+    const btnStyle = "p-0 m-0 bg-transparent border-none focus:outline-none hover:scale-110 transition-transform";
+
+    switch (statut) {
+      case 'EN_ATTENTE':
+        return (
+          <>
+            <button
+              onClick={() => handleUpdateStatus(id, 'VALIDE')}
+              className={`${btnStyle} text-green-600`}
+              title="Valider"
+              disabled={updatingId === id}
+            >
+              <CheckCircle size={20} />
+            </button>
+            <button
+              onClick={() => handleUpdateStatus(id, 'REFUSE')}
+              className={`${btnStyle} text-red-600`}
+              title="Refuser"
+              disabled={updatingId === id}
+            >
+              <XCircle size={20} />
+            </button>
+          </>
+        );
+      case 'VALIDE':
+        return (
+          <button
+            onClick={() => handleUpdateStatus(id, 'REFUSE')}
+            className={`${btnStyle} text-red-600`}
+            title="Refuser"
+            disabled={updatingId === id}
+          >
+            <XCircle size={20} />
+          </button>
+        );
+      case 'REFUSE':
+        return (
+          <button
+            onClick={() => handleUpdateStatus(id, 'VALIDE')}
+            className={`${btnStyle} text-green-600`}
+            title="Valider"
+            disabled={updatingId === id}
+          >
+            <CheckCircle size={20} />
+          </button>
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="max-w-5xl mx-auto p-4">
       <h2 className="text-2xl font-semibold text-blue-700 mb-6 flex items-center gap-2">

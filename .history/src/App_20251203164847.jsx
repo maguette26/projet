@@ -23,8 +23,8 @@ import MiniDefiDecouverte from './pages/MiniDefiDecouverte.jsx';
 import MiniDefiGratuite from './pages/MiniDefiGratuite.jsx';
 import GuideFixateurLimites from './pages/GuideFixateurLimites.jsx';
 import AutoEvaluationBasique from './pages/AutoEvaluationBasique.jsx';
-import EmotionAnalyzer from './pages/EmotionAnalyzer.jsx';
 
+import EmotionAnalyzer from './pages/EmotionAnalyzer.jsx';
 
 
 function App() {

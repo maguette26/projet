@@ -85,7 +85,6 @@ const Reservations = ({ proId }) => {
 
   const renderActions = (id, statut) => {
     const btnStyle = "p-0 m-0 bg-transparent border-none focus:outline-none hover:scale-110 transition-transform";
-
     switch (statut) {
       case 'EN_ATTENTE':
         return (
@@ -174,6 +173,8 @@ const Reservations = ({ proId }) => {
               <tr>
                 <th className="px-4 py-2 text-left text-sm font-semibold text-white">Date</th>
                 <th className="px-4 py-2 text-left text-sm font-semibold text-white">Heure</th>
+                <th className="px-4 py-2 text-left text-sm font-semibold text-white">Utilisateur</th>
+                <th className="px-4 py-2 text-left text-sm font-semibold text-white">Email</th>
                 <th className="px-4 py-2 text-left text-sm font-semibold text-white">Statut</th>
                 <th className="px-4 py-2 text-left text-sm font-semibold text-white">Actions</th>
               </tr>
@@ -181,6 +182,12 @@ const Reservations = ({ proId }) => {
             <tbody className="bg-white text-sm">
               {reservationsFiltrees.map((reservation, index) => {
                 const statutMapped = mapStatutValidation(reservation);
+                const utilisateur = reservation.utilisateur;
+                const utilisateurNomPrenom = utilisateur
+                  ? `${utilisateur.prenom || ''} ${utilisateur.nom || ''}`.trim()
+                  : '';
+                const utilisateurEmail = utilisateur?.email || '';
+
                 return (
                   <tr
                     key={reservation.id}
@@ -194,8 +201,16 @@ const Reservations = ({ proId }) => {
                     <td className="px-4 py-3 font-medium text-gray-800">
                       {formatHeure(reservation.heureConsultation)}
                     </td>
+                    <td className="px-4 py-3 font-medium text-gray-800">
+                      {utilisateurNomPrenom || <span className="text-gray-400 italic">-</span>}
+                    </td>
+                    <td className="px-4 py-3 font-medium text-gray-800">
+                      {utilisateurEmail || <span className="text-gray-400 italic">-</span>}
+                    </td>
                     <td className="px-4 py-3">{getStatutMessage(statutMapped)}</td>
-                    <td className="px-4 py-3 flex gap-2 items-center">{renderActions(reservation.id, statutMapped)}</td>
+                    <td className="px-4 py-3 flex gap-2 items-center">
+                      {renderActions(reservation.id, statutMapped)}
+                    </td>
                   </tr>
                 );
               })}

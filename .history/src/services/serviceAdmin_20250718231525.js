@@ -105,18 +105,38 @@ export const validateProfessionnel = async (id, valide) => {
  * @returns {Promise<Blob>} Une promesse qui résout avec un objet Blob représentant le fichier.
  */
 export const downloadDocumentJustificatif = async (filename) => {
-    try {
-        console.log(`serviceAdmin: Tentative de téléchargement du document: ${filename}`);
-        const response = await api.get(`/professionnels/fichiers/${filename}`, {
-            responseType: 'blob',
-        });
-        console.log(`serviceAdmin: Document '${filename}' téléchargé avec succès.`);
-        return response.data;
-    } catch (error) {
-        console.error(`serviceAdmin: Erreur lors du téléchargement du document '${filename}':`, error.response?.data || error.message);
-        throw error;
+  try {
+    console.log(`serviceAdmin: Tentative de téléchargement du document: ${filename}`);
+    const response = await api.get(`/professionnels/fichiers/${filename}`, {
+      responseType: 'blob',
+    });
+
+    const blob = response.data;
+
+    // Vérifier que le blob est non vide
+    if (blob.size === 0) {
+      throw new Error("Le fichier est vide ou n'a pas été trouvé sur le serveur.");
     }
+
+    // Créer un lien temporaire pour télécharger le fichier
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename; // nom du fichier pour le téléchargement
+    document.body.appendChild(a);
+    a.click();
+
+    // Nettoyer
+    a.remove();
+    window.URL.revokeObjectURL(url);
+
+    console.log(`serviceAdmin: Document '${filename}' téléchargé avec succès.`);
+  } catch (error) {
+    console.error(`serviceAdmin: Erreur lors du téléchargement du document '${filename}':`, error.response?.data || error.message);
+    throw error;
+  }
 };
+
 /*export async function getDiscussions() {
     const response = await fetch('/api/forum/admin/tous', {
         credentials: 'include',

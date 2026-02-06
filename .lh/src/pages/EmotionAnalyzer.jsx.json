@@ -1,0 +1,18 @@
+{
+    "sourceFile": "src/pages/EmotionAnalyzer.jsx",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1770380558414,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1770380558414,
+            "name": "Commit-0",
+            "content": "import React, { useState } from \"react\";\r\n\r\nconst EmotionAnalyzer = () => {\r\n  const [text, setText] = useState(\"\");\r\n  const [result, setResult] = useState(null);\r\n  const [loading, setLoading] = useState(false);\r\n  const [error, setError] = useState(\"\");\r\n\r\n  const analyzeEmotion = async () => {\r\n    if (!text.trim()) {\r\n      setError(\"Veuillez entrer un texte.\");\r\n      return;\r\n    }\r\n\r\n    setError(\"\");\r\n    setLoading(true);\r\n\r\n    try {\r\n      const response = await fetch(\"http://localhost:9191/api/ai/analyze-emotion\", {\r\n  method: \"POST\",\r\n  headers: {\r\n    \"Content-Type\": \"application/json\",\r\n  },\r\n ody: JSON.stringify({ message: text }) \r\n});\r\n\r\n      if (!response.ok) {\r\n        throw new Error(\"Erreur lors de l'analyse.\");\r\n      }\r\n\r\n      const data = await response.json();\r\n      setResult(data); // on reçoit {analysis: \"...\"}\r\n    } catch (e) {\r\n      setError(\"Une erreur est survenue.\");\r\n    } finally {\r\n      setLoading(false);\r\n    }\r\n  };\r\n\r\n  return (\r\n    <div style={{ maxWidth: \"600px\", margin: \"30px auto\" }}>\r\n      <h2>Analyse Emotionnelle</h2>\r\n\r\n      <textarea\r\n        rows=\"5\"\r\n        placeholder=\"Écris ton texte ici…\"\r\n        value={text}\r\n        onChange={(e) => setText(e.target.value)}\r\n        style={{\r\n          width: \"100%\",\r\n          padding: \"10px\",\r\n          borderRadius: \"8px\",\r\n          border: \"1px solid #ccc\",\r\n        }}\r\n      />\r\n\r\n      <button\r\n        onClick={analyzeEmotion}\r\n        style={{\r\n          marginTop: \"10px\",\r\n          padding: \"10px 20px\",\r\n          borderRadius: \"8px\",\r\n          border: \"none\",\r\n          background: \"#4a6cff\",\r\n          color: \"white\",\r\n          cursor: \"pointer\",\r\n        }}\r\n      >\r\n        {loading ? \"Analyse...\" : \"Analyser\"}\r\n      </button>\r\n\r\n      {error && <p style={{ color: \"red\", marginTop: \"10px\" }}>{error}</p>}\r\n\r\n      {result && (\r\n        <div\r\n          style={{\r\n            marginTop: \"20px\",\r\n            padding: \"15px\",\r\n            borderRadius: \"10px\",\r\n            background: \"#f4f4f4\",\r\n          }}\r\n        >\r\n          <h3>Résultat :</h3>\r\n          <p>{result.analysis}</p>\r\n        </div>\r\n      )}\r\n    </div>\r\n  );\r\n};\r\n\r\nexport default EmotionAnalyzer;\r\n"
+        }
+    ]
+}

@@ -224,7 +224,7 @@ const Forum = () => {
             }));
             fetchSujets();
         } catch (err) {
-            setErrorReponses(err.response?.data?.message || "Erreur lors de l'envoi de la réponse,certains mots utilisés ne sont pas autorisés dans la réponse. Veuillez reformuler.");
+            setErrorReponses(err.response?.data?.message || "Erreur lors de l'envoi de la réponse.");
         }
     };
 
