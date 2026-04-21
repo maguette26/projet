@@ -1,0 +1,18 @@
+{
+    "sourceFile": "server/index.js",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1775579613759,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1775579613759,
+            "name": "Commit-0",
+            "content": "verimport express from \"express\";\r\nimport cors from \"cors\";\r\nimport dotenv from \"dotenv\";\r\nimport { GoogleGenerativeAI } from \"@google/generative-ai\";\r\n\r\ndotenv.config();\r\n\r\nconst app = express();\r\napp.use(cors());\r\napp.use(express.json());\r\n\r\nconst genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);\r\n\r\nlet chatHistory = []; // ✅ mémoire serveur\r\n\r\napp.post(\"/chat\", async (req, res) => {\r\n  const userMessage = req.body.message;\r\n\r\n  try {\r\n    const model = genAI.getGenerativeModel({\r\n      model: \"models/gemini-2.5-flash\",\r\n      systemInstruction: `\r\nTu es PsyBot, un assistant psychologique empathique.\r\n\r\nTon rôle :\r\n- écouter avec bienveillance\r\n- répondre doucement comme un psychologue\r\n- poser des questions ouvertes\r\n- rassurer sans juger\r\n- ne jamais être froid ou robotique\r\n\r\nStyle :\r\n- chaleureux, humain, doux\r\n- phrases courtes\r\n- emojis légers si adapté\r\n\r\nSi l'utilisateur dit \"coucou\", répond naturellement.\r\n      `,\r\n    });\r\n\r\n    // ✅ ajouter message utilisateur dans la mémoire\r\n    chatHistory.push({\r\n      role: \"user\",\r\n      parts: [{ text: userMessage }],\r\n    });\r\n\r\n    const result = await model.generateContent({\r\n      contents: chatHistory,\r\n    });\r\n\r\n    const reply = result.response.text();\r\n\r\n    // ✅ ajouter réponse du bot dans la mémoire\r\n    chatHistory.push({\r\n      role: \"model\",\r\n      parts: [{ text: reply }],\r\n    });\r\n\r\n    res.json({ reply });\r\n  } catch (error) {\r\n    console.log(\"Erreur Gemini:\", error);\r\n    res.status(500).json({ reply: \"Désolé, je rencontre un souci 😢\" });\r\n  }\r\n});\r\n\r\napp.listen(5000, () =>\r\n  console.log(\"✅ PsyBot Gemini empathique lancé sur port 5000\")\r\n);\r\n"
+        }
+    ]
+}

@@ -10,14 +10,16 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@fortawesome/fontawesome-free": "^7.2.0",
     "@fortawesome/fontawesome-svg-core": "^6.7.2",
     "@fortawesome/free-solid-svg-icons": "^6.7.2",
-    "@fortawesome/react-fontawesome": "^0.2.2",
+    "@fortawesome/react-fontawesome": "^0.2.6",
     "@google/genai": "^1.40.0",
     "@google/generative-ai": "^0.24.1",
     "@headlessui/react": "^2.2.4",
+    "@heroicons/react": "^2.2.0",
     "@paypal/react-paypal-js": "^8.8.3",
-    "@stomp/stompjs": "^7.1.1",
+    "@stomp/stompjs": "^7.3.0",
     "@stripe/react-stripe-js": "^3.7.0",
     "@stripe/stripe-js": "^7.3.1",
     "axios": "^1.9.0",
@@ -37,8 +39,10 @@
     "react-icons": "^5.5.0",
     "react-modal": "^3.16.3",
     "react-router-dom": "^6.30.1",
+    "react-speech-recognition": "^4.0.1",
     "react-toastify": "^11.0.5",
-    "sockjs-client": "^1.6.1"
+    "sockjs-client": "^1.6.1",
+    "stompjs": "^2.3.3"
   },
   "devDependencies": {
     "@eslint/js": "^9.25.0",

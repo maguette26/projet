@@ -1,0 +1,218 @@
+import React, { useState, useEffect, useRef } from "react";
+import { Bot, Send } from "lucide-react";
+import "bootstrap/dist/css/bootstrap.min.css";
+
+const Chatbot = () => {
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState("");
+  const [userId, setUserId] = useState(null);
+  const [loaded, setLoaded] = useState(false);
+  const [loadingBot, setLoadingBot] = useState(false);
+
+  const endRef = useRef(null);
+  const inputRef = useRef(null);
+
+  // ================= AUTH =================
+  useEffect(() => {
+    const syncAuth = () => {
+      setUserId(localStorage.getItem("userId"));
+    };
+
+    syncAuth();
+    window.addEventListener("storage", syncAuth);
+    return () => window.removeEventListener("storage", syncAuth);
+  }, []);
+
+  // ================= LOAD CHAT =================
+  useEffect(() => {
+    const defaultMsg = [
+      {
+        sender: "bot",
+        text: "Bonjour 😊 Je suis PsyBot.",
+        time: new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+      },
+    ];
+
+    setLoaded(false);
+
+    if (!userId) {
+      setMessages(defaultMsg);
+      setLoaded(true);
+      return;
+    }
+
+    const saved = localStorage.getItem(`psybot_history_${userId}`);
+    setMessages(saved ? JSON.parse(saved) : defaultMsg);
+    setLoaded(true);
+  }, [userId]);
+
+  // ================= SAVE CHAT =================
+  useEffect(() => {
+    if (!loaded || !userId) return;
+
+    localStorage.setItem(
+      `psybot_history_${userId}`,
+      JSON.stringify(messages)
+    );
+  }, [messages, loaded, userId]);
+
+  // ================= SCROLL =================
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      endRef.current?.scrollIntoView({ behavior: "auto" });
+    }, 50);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  // ================= FOCUS INPUT =================
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
+
+  // ================= SEND =================
+  const sendMessage = async () => {
+    if (!input.trim()) return;
+
+    const userMsg = {
+      sender: "user",
+      text: input,
+      time: new Date().toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+    };
+
+    setMessages((prev) => [...prev, userMsg]);
+    setInput("");
+    setLoadingBot(true);
+
+    try {
+      const res = await fetch("http://localhost:5000/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: userMsg.text,
+          userId: userId || "guest",
+        }),
+      });
+
+      const data = await res.json();
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          sender: "bot",
+          text: data.reply,
+          time: new Date().toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+        },
+      ]);
+    } catch (err) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          sender: "bot",
+          text: "Erreur serveur 😢",
+          time: new Date().toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+        },
+      ]);
+    }
+
+    setLoadingBot(false);
+  };
+
+  return (
+    <div className="d-flex flex-column" style={{ minHeight: "100vh", background: "#f0f4f8" }}>
+
+      {/* HEADER */}
+      <div className="text-center my-3 d-flex justify-content-center align-items-center gap-2">
+        <Bot size={28} className="text-primary" />
+        <h4 className="fw-bold mb-0">PsyBot</h4>
+        <Bot size={28} className="text-primary" />
+      </div>
+
+      {/* DESCRIPTION */}
+      <div className="text-center px-3 mb-2">
+        <div style={{
+          maxWidth: "650px",
+          margin: "0 auto",
+          padding: "10px",
+          borderRadius: "10px",
+          background: "#fff",
+          fontSize: "0.9rem",
+          color: "#6c757d",
+        }}>
+          🤖 PsyBot est ton assistant bien-être mental. Il t’écoute sans jugement.
+        </div>
+      </div>
+
+      {/* MESSAGES */}
+      <div className="flex-grow-1 overflow-auto p-3 d-flex flex-column">
+        {messages.map((msg, i) => (
+          <div
+            key={i}
+            className={`d-flex mb-2 ${
+              msg.sender === "user" ? "justify-content-end" : "justify-content-start"
+            }`}
+          >
+            <div
+              className="p-3 rounded-4 shadow-sm"
+              style={{
+                maxWidth: "70%",
+                background: msg.sender === "user" ? "#0d6efd" : "#e9f5f9",
+                color: msg.sender === "user" ? "#fff" : "#1f3d4d",
+              }}
+            >
+              {msg.text}
+              <small className="d-block text-end mt-1" style={{ fontSize: 11 }}>
+                {msg.time}
+              </small>
+            </div>
+          </div>
+        ))}
+
+        {/* loading bot */}
+        {loadingBot && (
+          <div className="text-start text-muted px-2">
+            PsyBot est en train d’écrire...
+          </div>
+        )}
+
+        <div ref={endRef} />
+      </div>
+
+      {/* INPUT STICKY */}
+      <div
+        className="p-3 bg-white d-flex gap-2 shadow-sm"
+        style={{ position: "sticky", bottom: 0 }}
+      >
+        <input
+          ref={inputRef}
+          className="form-control rounded-pill"
+          placeholder="Écris ton message..."
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+        />
+
+        <button className="btn btn-primary rounded-circle" onClick={sendMessage}>
+          <Send size={18} />
+        </button>
+      </div>
+    </div>
+  );
+};
+
+export default Chatbot;

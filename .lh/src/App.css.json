@@ -1,0 +1,34 @@
+{
+    "sourceFile": "src/App.css",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 4,
+            "patches": [
+                {
+                    "date": 1771352061852,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                },
+                {
+                    "date": 1771352072209,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -39,8 +39,8 @@\n \r\n .read-the-docs {\r\n   color: #888;\r\n }\r\n-button:focus {\r\n+/button:focus {\r\n   outline: none !important;\r\n   box-shadow: none !important;\r\n }\r\n"
+                },
+                {
+                    "date": 1771352086723,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -39,8 +39,4 @@\n \r\n .read-the-docs {\r\n   color: #888;\r\n }\r\n-/button:focus {\r\n-  outline: none !important;\r\n-  box-shadow: none !important;\r\n-}\r\n"
+                },
+                {
+                    "date": 1771352714272,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -39,4 +39,5 @@\n \r\n .read-the-docs {\r\n   color: #888;\r\n }\r\n+\r\n"
+                },
+                {
+                    "date": 1771352787710,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -0,0 +1,43 @@\n+#root {\r\n+  max-width: 1280px;\r\n+  margin: 0 auto;\r\n+  padding: 2rem;\r\n+  text-align: center;\r\n+}\r\n+\r\n+.logo {\r\n+  height: 6em;\r\n+  padding: 1.5em;\r\n+  will-change: filter;\r\n+  transition: filter 300ms;\r\n+}\r\n+.logo:hover {\r\n+  filter: drop-shadow(0 0 2em #646cffaa);\r\n+}\r\n+.logo.react:hover {\r\n+  filter: drop-shadow(0 0 2em #61dafbaa);\r\n+}\r\n+\r\n+@keyframes logo-spin {\r\n+  from {\r\n+    transform: rotate(0deg);\r\n+  }\r\n+  to {\r\n+    transform: rotate(360deg);\r\n+  }\r\n+}\r\n+\r\n+@media (prefers-reduced-motion: no-preference) {\r\n+  a:nth-of-type(2) .logo {\r\n+    animation: logo-spin infinite 20s linear;\r\n+  }\r\n+}\r\n+\r\n+.card {\r\n+  padding: 2em;\r\n+}\r\n+\r\n+.read-the-docs {\r\n+  color: #888;\r\n+}\r\n+\r\n"
+                }
+            ],
+            "date": 1771352061852,
+            "name": "Commit-0",
+            "content": "#root {\r\n  max-width: 1280px;\r\n  margin: 0 auto;\r\n  padding: 2rem;\r\n  text-align: center;\r\n}\r\n\r\n.logo {\r\n  height: 6em;\r\n  padding: 1.5em;\r\n  will-change: filter;\r\n  transition: filter 300ms;\r\n}\r\n.logo:hover {\r\n  filter: drop-shadow(0 0 2em #646cffaa);\r\n}\r\n.logo.react:hover {\r\n  filter: drop-shadow(0 0 2em #61dafbaa);\r\n}\r\n\r\n@keyframes logo-spin {\r\n  from {\r\n    transform: rotate(0deg);\r\n  }\r\n  to {\r\n    transform: rotate(360deg);\r\n  }\r\n}\r\n\r\n@media (prefers-reduced-motion: no-preference) {\r\n  a:nth-of-type(2) .logo {\r\n    animation: logo-spin infinite 20s linear;\r\n  }\r\n}\r\n\r\n.card {\r\n  padding: 2em;\r\n}\r\n\r\n.read-the-docs {\r\n  color: #888;\r\n}\r\nbutton:focus {\r\n  outline: none !important;\r\n  box-shadow: none !important;\r\n}\r\n"
+        }
+    ]
+}

@@ -1,0 +1,18 @@
+{
+    "sourceFile": "src/contexts/AuthContext.jsx",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1775588826489,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1775588826489,
+            "name": "Commit-0",
+            "content": "import React, { createContext, useState, useEffect } from 'react';\r\n\r\nexport const AuthContext = createContext();\r\n\r\nexport const AuthProvider = ({ children }) => {\r\n  const [user, setUser] = useState({\r\n    role: localStorage.getItem('role') || null,\r\n    email: localStorage.getItem('email') || null\r\n  });\r\n\r\n  useEffect(() => {\r\n    const handleStorageChange = () => {\r\n      setUser({\r\n        role: localStorage.getItem('role'),\r\n        email: localStorage.getItem('email')\r\n      });\r\n    };\r\n    window.addEventListener('storage', handleStorageChange);\r\n    return () => window.removeEventListener('storage', handleStorageChange);\r\n  }, []);\r\n\r\n  const login = (role, email) => {\r\n    localStorage.setItem('role', role);\r\n    localStorage.setItem('email', email);\r\n    setUser({ role, email });\r\n  };\r\n\r\n  const logout = () => {\r\n    localStorage.removeItem('role');\r\n    localStorage.removeItem('email');\r\n    setUser({ role: null, email: null });\r\n  };\r\n\r\n  return (\r\n    <AuthContext.Provider value={{ user, login, logout }}>\r\n      {children}\r\n    </AuthContext.Provider>\r\n  );\r\n};"
+        }
+    ]
+}

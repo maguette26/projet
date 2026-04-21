@@ -1,0 +1,34 @@
+{
+    "sourceFile": "tailwind.config.js",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 4,
+            "patches": [
+                {
+                    "date": 1775584384655,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                },
+                {
+                    "date": 1775584398205,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -5,9 +5,9 @@\n   theme: {\r\n     extend: {},\r\n   },\r\n   plugins: [],\r\n-}\r\n+},\r\n @keyframes fadeInUp {\r\n   0% { opacity: 0; transform: translateY(20px); }\r\n   100% { opacity: 1; transform: translateY(0); }\r\n }\r\n"
+                },
+                {
+                    "date": 1775584405579,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -5,9 +5,9 @@\n   theme: {\r\n     extend: {},\r\n   },\r\n   plugins: [],\r\n-},\r\n+}\r\n @keyframes fadeInUp {\r\n   0% { opacity: 0; transform: translateY(20px); }\r\n   100% { opacity: 1; transform: translateY(0); }\r\n }\r\n"
+                },
+                {
+                    "date": 1775584458160,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -1,17 +1,19 @@\n /** @type {import('tailwindcss').Config} */\r\n export default {\r\n   darkMode: 'class',\r\n-  content: [ \"./src/**/*.{js,jsx,ts,tsx}\",],\r\n+  content: [\"./src/**/*.{js,jsx,ts,tsx}\"],\r\n   theme: {\r\n-    extend: {},\r\n+    extend: {\r\n+      keyframes: {\r\n+        fadeInUp: {\r\n+          '0%': { opacity: '0', transform: 'translateY(20px)' },\r\n+          '100%': { opacity: '1', transform: 'translateY(0)' },\r\n+        },\r\n+      },\r\n+      animation: {\r\n+        fadeInUp: 'fadeInUp 0.8s ease forwards',\r\n+      },\r\n+    },\r\n   },\r\n   plugins: [],\r\n-}\r\n-@keyframes fadeInUp {\r\n-  0% { opacity: 0; transform: translateY(20px); }\r\n-  100% { opacity: 1; transform: translateY(0); }\r\n-}\r\n-\r\n-.animate-fadeInUp {\r\n-  animation: fadeInUp 0.8s ease forwards;\r\n-}\r\n+}\n\\ No newline at end of file\n"
+                },
+                {
+                    "date": 1775584470827,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -1,19 +1,10 @@\n /** @type {import('tailwindcss').Config} */\r\n export default {\r\n   darkMode: 'class',\r\n-  content: [\"./src/**/*.{js,jsx,ts,tsx}\"],\r\n+  content: [ \"./src/**/*.{js,jsx,ts,tsx}\",],\r\n   theme: {\r\n-    extend: {\r\n-      keyframes: {\r\n-        fadeInUp: {\r\n-          '0%': { opacity: '0', transform: 'translateY(20px)' },\r\n-          '100%': { opacity: '1', transform: 'translateY(0)' },\r\n-        },\r\n-      },\r\n-      animation: {\r\n-        fadeInUp: 'fadeInUp 0.8s ease forwards',\r\n-      },\r\n-    },\r\n+    extend: {},\r\n   },\r\n\\ No newline at end of file\n   plugins: [],\r\n-}\n+}\r\n+\r\n"
+                }
+            ],
+            "date": 1775584384655,
+            "name": "Commit-0",
+            "content": "/** @type {import('tailwindcss').Config} */\r\nexport default {\r\n  darkMode: 'class',\r\n  content: [ \"./src/**/*.{js,jsx,ts,tsx}\",],\r\n  theme: {\r\n    extend: {},\r\n  },\r\n  plugins: [],\r\n}\r\n@keyframes fadeInUp {\r\n  0% { opacity: 0; transform: translateY(20px); }\r\n  100% { opacity: 1; transform: translateY(0); }\r\n}\r\n\r\n.animate-fadeInUp {\r\n  animation: fadeInUp 0.8s ease forwards;\r\n}\r\n"
+        }
+    ]
+}

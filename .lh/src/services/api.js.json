@@ -1,0 +1,26 @@
+{
+    "sourceFile": "src/services/api.js",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 2,
+            "patches": [
+                {
+                    "date": 1776792242879,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                },
+                {
+                    "date": 1776797798877,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -19,9 +19,9 @@\n   error => {\r\n     if (error.response && error.response.status === 401) {\r\n       console.warn(\"Session expirée ou non autorisée, redirection vers la page de connexion...\");\r\n       localStorage.removeItem('role'); // Nettoyer le rôle côté client\r\n-      \r\n+      window.location.href = '/connexion'; // Redirige l'utilisateur\r\n     }\r\n     return Promise.reject(error);\r\n   }\r\n );\r\n"
+                },
+                {
+                    "date": 1776797977122,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -19,9 +19,9 @@\n   error => {\r\n     if (error.response && error.response.status === 401) {\r\n       console.warn(\"Session expirée ou non autorisée, redirection vers la page de connexion...\");\r\n       localStorage.removeItem('role'); // Nettoyer le rôle côté client\r\n-      window.location.href = '/connexion'; // Redirige l'utilisateur\r\n+      \r\n     }\r\n     return Promise.reject(error);\r\n   }\r\n );\r\n"
+                }
+            ],
+            "date": 1776792242879,
+            "name": "Commit-0",
+            "content": "// src/services/api.js\r\nimport axios from 'axios';\r\n\r\n// La baseURL est maintenant simplement '/api', car le proxy du serveur de développement\r\n// va rediriger toutes les requêtes commençant par '/api' vers votre backend.\r\nconst API_BASE_URL = '/api'; \r\n\r\nconst api = axios.create({\r\n  baseURL: API_BASE_URL,\r\n  withCredentials: true, // Permet d'envoyer le cookie JSESSIONID avec les requêtes\r\n  headers: {\r\n    'Content-Type': 'application/json',\r\n  },\r\n});\r\n\r\n// Intercepteur pour gérer les erreurs de session / déconnexion automatique\r\napi.interceptors.response.use(\r\n  response => response,\r\n  error => {\r\n    if (error.response && error.response.status === 401) {\r\n      console.warn(\"Session expirée ou non autorisée, redirection vers la page de connexion...\");\r\n      localStorage.removeItem('role'); // Nettoyer le rôle côté client\r\n      \r\n    }\r\n    return Promise.reject(error);\r\n  }\r\n);\r\n\r\nexport default api;\r\n"
+        }
+    ]
+}
